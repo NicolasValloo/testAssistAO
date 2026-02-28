@@ -393,8 +393,20 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
     <!-- STEP 2 -->
     <div id="step-2" style="display:none;">
-      <h2>Références identifiées</h2>
-      <div class="subtitle">Marchés publics attribués à votre structure, issus des données DECP.</div>
+      <h2>Compétences & références</h2>
+      <div class="subtitle">Informations détectées automatiquement. Cochez les références à intégrer à votre profil.</div>
+
+      <!-- Compétences détectées via NAF -->
+      <div id="competences-section" style="display:none; margin-bottom:24px;">
+        <h4 style="font-size:14px; font-weight:700; margin-bottom:10px;">Compétences détectées</h4>
+        <div id="competences-list" class="comp-grid"></div>
+        <div id="opqibi-link" style="display:none; margin-top:10px; padding:12px 16px; background:var(--accent-light); border-radius:8px; font-size:13px;">
+          🏗️ Votre structure relève de l'ingénierie (NAF 7112B). <a id="opqibi-href" href="#" target="_blank" style="color:var(--accent); font-weight:600;">Consultez vos qualifications OPQIBI →</a>
+        </div>
+      </div>
+
+      <!-- Références DECP -->
+      <h4 style="font-size:14px; font-weight:700; margin-bottom:10px;">Marchés publics attribués</h4>
 
       <div id="decp-loading" style="text-align:center; padding:40px 0; color:var(--text-mid);">
         <div style="font-size:24px; margin-bottom:10px;">⏳</div>
@@ -403,12 +415,15 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
       <div id="decp-empty" style="display:none; text-align:center; padding:40px 0;">
         <div style="font-size:32px; margin-bottom:10px;">📭</div>
-        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px;">Aucun marché trouvé dans les DECP</div>
-        <div style="font-size:13px; color:var(--text-mid);">Votre structure n'apparaît pas encore dans les données essentielles de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.</div>
+        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px;">Aucun marché trouvé</div>
+        <div style="font-size:13px; color:var(--text-mid);">Votre structure n'apparaît pas encore dans les données de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.</div>
       </div>
 
       <div id="decp-results" style="display:none;">
-        <div id="decp-count" style="font-size:13px; color:var(--text-mid); margin-bottom:14px;"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <div id="decp-count" style="font-size:13px; color:var(--text-mid);"></div>
+          <label style="font-size:12px; color:var(--accent); cursor:pointer; font-weight:600;" onclick="toggleAllDecp()"><span id="toggle-all-label">Tout sélectionner</span></label>
+        </div>
         <div id="decp-list"></div>
       </div>
 
@@ -884,12 +899,12 @@ function goToStep(step) {
   // Trigger DECP fetch when entering step 2
   if (step === 2 && selectedStructure) {
     fetchDECP(selectedStructure.siren);
+    detectCompetences(selectedStructure.activite_code);
   }
 }
 
-// ── DECP API — Fetch marchés attribués ──
-var DECP_PRIMARY = 'https://tabular-api.data.gouv.fr/api/resources/22847056-61df-452d-837d-8b8ceadbfc52/data/';
-var DECP_FALLBACK = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/decp-v3-marches-valides/records';
+// ── DECP API — data.economie.gouv.fr (CORS OK) ──
+var DECP_API = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/decp-v3-marches-valides/records';
 
 function fetchDECP(siren) {
   if (!siren) return;
@@ -905,38 +920,8 @@ function fetchDECP(siren) {
   resultsEl.style.display = 'none';
   listEl.innerHTML = '';
 
-  // Primary: data.gouv.fr tabular API
-  var url1 = DECP_PRIMARY +
-    '?titulaire_id__contains=' + encodeURIComponent(siren) +
-    '&donneesActuelles__exact=true' +
-    '&dateNotification__sort=desc' +
-    '&page_size=30';
-
-  console.log('DECP primary:', url1);
-
-  fetch(url1)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(resp) {
-      renderDECP(resp.data || [], resp.meta && resp.meta.total);
-    })
-    .catch(function(err) {
-      console.warn('Primary DECP failed (' + err.message + '), trying fallback…');
-      fetchDECPFallback(siren);
-    });
-}
-
-function fetchDECPFallback(siren) {
-  // data.economie.gouv.fr: column is titulaire_id_titulaire (text field, not number)
   var where = 'titulaire_id_titulaire LIKE "' + siren + '%"';
-  var url = DECP_FALLBACK +
-    '?where=' + encodeURIComponent(where) +
-    '&order_by=datenotification%20DESC' +
-    '&limit=30';
-
-  console.log('DECP fallback:', url);
+  var url = DECP_API + '?where=' + encodeURIComponent(where) + '&limit=30&order_by=date_notification_marche%20DESC';
 
   fetch(url)
     .then(function(r) {
@@ -944,74 +929,90 @@ function fetchDECPFallback(siren) {
       return r.json();
     })
     .then(function(resp) {
-      // Normalize to same shape as primary API
-      var rows = (resp.results || []).map(function(r) {
-        return {
-          objet: r.objet,
-          montant: r.montant,
-          acheteur_nom: r.acheteur_nom || 'Acheteur public',
-          dateNotification: r.datenotification,
-          nature: r.nature,
-          type: null,
-          acheteur_commune_nom: r.lieuexecution_nom || ''
-        };
-      });
-      renderDECP(rows, resp.total_count);
+      loadEl.style.display = 'none';
+      var data = resp.results || [];
+
+      if (data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      var total = resp.total_count || data.length;
+      countEl.textContent = total + ' marché' + (total > 1 ? 's' : '') + ' trouvé' + (total > 1 ? 's' : '') + (total > 30 ? ' (30 plus récents affichés)' : '');
+      resultsEl.style.display = 'block';
+      resultsEl.classList.add('fade-up');
+
+      var html = '';
+      for (var i = 0; i < data.length; i++) {
+        var m = data[i];
+        var montant = m.montant_marche ? formatMontant(m.montant_marche) : (m.montant ? formatMontant(m.montant) : 'N/C');
+        var dateNotif = m.date_notification_marche || m.datenotification || '';
+        var annee = dateNotif ? String(dateNotif).substring(0, 4) : '';
+        var acheteur = m.acheteur_nom_acheteur || m.nom_acheteur || m.acheteur_nom || 'Acheteur public';
+        var objet = m.objet_marche || m.objet || 'Sans objet';
+        var nature = m.nature_marche || m.nature || '';
+
+        html += '<label class="ref-card" style="cursor:pointer; display:flex; align-items:flex-start;">' +
+          '<input type="checkbox" class="decp-check" checked style="margin-right:12px; margin-top:4px; accent-color:var(--accent); width:18px; height:18px; flex-shrink:0;">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<h4>' + escapeHtml(objet.length > 120 ? objet.substring(0, 120) + '…' : objet) + '</h4>' +
+            '<p>' + escapeHtml(acheteur) +
+            (nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(nature) + '</span>' : '') +
+            '</p>' +
+          '</div>' +
+          '<div class="ref-amount">' + montant + (annee ? '<div class="ref-year">' + annee + '</div>' : '') + '</div>' +
+        '</label>';
+      }
+      listEl.innerHTML = html;
     })
     .catch(function(err) {
-      console.error('Both DECP APIs failed:', err);
-      document.getElementById('decp-loading').style.display = 'none';
-      var emptyEl = document.getElementById('decp-empty');
+      console.error('DECP API error:', err);
+      loadEl.style.display = 'none';
       emptyEl.style.display = 'block';
       emptyEl.querySelector('div:nth-child(2)').textContent = 'Erreur de connexion';
-      emptyEl.querySelector('div:nth-child(3)').textContent = 'Impossible de joindre les API DECP. Si vous ouvrez ce fichier en local (file://), essayez depuis un serveur web ou depuis le prototype déployé.';
+      emptyEl.querySelector('div:nth-child(3)').textContent = 'Impossible de joindre l\'API (' + err.message + ')';
     });
 }
 
-function renderDECP(data, total) {
-  var loadEl = document.getElementById('decp-loading');
-  var emptyEl = document.getElementById('decp-empty');
-  var resultsEl = document.getElementById('decp-results');
-  var listEl = document.getElementById('decp-list');
-  var countEl = document.getElementById('decp-count');
+function toggleAllDecp() {
+  var checks = document.querySelectorAll('.decp-check');
+  var allChecked = Array.prototype.every.call(checks, function(c) { return c.checked; });
+  checks.forEach(function(c) { c.checked = !allChecked; });
+  document.getElementById('toggle-all-label').textContent = allChecked ? 'Tout sélectionner' : 'Tout désélectionner';
+}
 
-  loadEl.style.display = 'none';
+// ── Compétences par code NAF ──
+function detectCompetences(naf) {
+  if (!naf) return;
+  var section = document.getElementById('competences-section');
+  var list = document.getElementById('competences-list');
+  var opqibiLink = document.getElementById('opqibi-link');
 
-  if (!data || data.length === 0) {
-    emptyEl.style.display = 'block';
-    emptyEl.querySelector('div:nth-child(2)').textContent = 'Aucun marché trouvé dans les DECP';
-    emptyEl.querySelector('div:nth-child(3)').textContent = 'Votre structure n\'apparaît pas encore dans les données essentielles de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.';
-    return;
+  var nafClean = naf.replace(/[\.\s\-]/g, '').toUpperCase();
+  var tags = [];
+
+  if (nafClean === '7111Z') {
+    tags = ['Architecte', 'Maîtrise d\'œuvre', 'Conception architecturale', 'Permis de construire'];
+  } else if (nafClean === '7112B') {
+    tags = ['Ingénierie', 'Études techniques', 'Maîtrise d\'œuvre technique'];
+    opqibiLink.style.display = 'block';
+    document.getElementById('opqibi-href').href = 'https://www.opqibi.com/recherche-resultat?Siren=' + (selectedStructure ? selectedStructure.siren : '');
+  } else if (nafClean === '7112A') {
+    tags = ['Ingénierie', 'Activité de métreur', 'Études techniques'];
   }
 
-  var count = total || data.length;
-  countEl.textContent = count + ' marché' + (count > 1 ? 's' : '') + ' trouvé' + (count > 1 ? 's' : '') + ' dans les DECP' + (count > 30 ? ' (30 plus récents affichés)' : '');
-  resultsEl.style.display = 'block';
-  resultsEl.classList.add('fade-up');
+  if (tags.length === 0 && selectedStructure && selectedStructure.activite_label) {
+    tags = [selectedStructure.activite_label];
+  }
 
+  if (tags.length === 0) { section.style.display = 'none'; return; }
+
+  section.style.display = 'block';
   var html = '';
-  for (var i = 0; i < data.length; i++) {
-    var m = data[i];
-    var montant = m.montant ? formatMontant(m.montant) : 'N/C';
-    var annee = m.dateNotification ? String(m.dateNotification).substring(0, 4) : '';
-    var acheteur = m.acheteur_nom || 'Acheteur inconnu';
-    var objet = m.objet || 'Sans objet';
-    var commune = m.acheteur_commune_nom || '';
-    var nature = m.nature || '';
-    var typeMarche = m.type || '';
-
-    html += '<div class="ref-card">' +
-      '<div style="flex:1; min-width:0;">' +
-        '<h4>' + escapeHtml(objet.length > 120 ? objet.substring(0, 120) + '…' : objet) + '</h4>' +
-        '<p>' + escapeHtml(acheteur) + (commune ? ' · ' + escapeHtml(commune) : '') +
-        (nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(nature) + '</span>' : '') +
-        (typeMarche ? ' · <span style="font-size:10px; color:var(--text-mid);">' + escapeHtml(typeMarche) + '</span>' : '') +
-        ' <span class="src src-decp" style="font-size:9px;">DECP</span></p>' +
-      '</div>' +
-      '<div class="ref-amount">' + montant + (annee ? '<div class="ref-year">' + annee + '</div>' : '') + '</div>' +
-    '</div>';
+  for (var i = 0; i < tags.length; i++) {
+    html += '<div class="comp-tag active" onclick="this.classList.toggle(\'active\')">' + escapeHtml(tags[i]) + '</div>';
   }
-  listEl.innerHTML = html;
+  list.innerHTML = html;
 }
 
 function formatMontant(val) {
