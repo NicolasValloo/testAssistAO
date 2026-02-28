@@ -904,25 +904,33 @@ function fetchDECP(siren) {
   resultsEl.style.display = 'none';
   listEl.innerHTML = '';
 
-  // Search by SIREN prefix in titulaire_id (SIRET = SIREN + NIC)
+  // titulaire_id contains the SIREN (first 9 digits of SIRET)
   var url = DECP_API + '?titulaire_id__contains=' + encodeURIComponent(siren) +
-    '&donneesActuelles__exact=true' +
-    '&columns=objet,montant,acheteur_nom,dateNotification,nature,lieuExecution_nom' +
-    '&order_by=-dateNotification' +
-    '&page_size=30';
+    '&page_size=30' +
+    '&dateNotification__sort=desc';
+
+  console.log('DECP API call:', url);
 
   fetch(url)
-    .then(function(r) { return r.json(); })
+    .then(function(r) {
+      console.log('DECP response status:', r.status);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    })
     .then(function(resp) {
+      console.log('DECP response:', resp);
       loadEl.style.display = 'none';
       var data = resp.data || [];
 
       if (data.length === 0) {
         emptyEl.style.display = 'block';
+        emptyEl.querySelector('div:nth-child(2)').textContent = 'Aucun marché trouvé dans les DECP';
+        emptyEl.querySelector('div:nth-child(3)').textContent = 'Votre structure n\'apparaît pas encore dans les données essentielles de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.';
         return;
       }
 
-      countEl.textContent = (resp.meta && resp.meta.total ? resp.meta.total : data.length) + ' marché' + (data.length > 1 ? 's' : '') + ' trouvé' + (data.length > 1 ? 's' : '') + ' dans les DECP';
+      var total = (resp.meta && resp.meta.total) ? resp.meta.total : data.length;
+      countEl.textContent = total + ' marché' + (total > 1 ? 's' : '') + ' trouvé' + (total > 1 ? 's' : '') + ' dans les DECP';
       resultsEl.style.display = 'block';
       resultsEl.classList.add('fade-up');
 
@@ -930,7 +938,7 @@ function fetchDECP(siren) {
       for (var i = 0; i < data.length; i++) {
         var m = data[i];
         var montant = m.montant ? formatMontant(m.montant) : 'N/C';
-        var annee = m.dateNotification ? m.dateNotification.substring(0, 4) : '';
+        var annee = m.dateNotification ? String(m.dateNotification).substring(0, 4) : '';
         var acheteur = m.acheteur_nom || 'Acheteur inconnu';
         var objet = m.objet || 'Sans objet';
         var lieu = m.lieuExecution_nom || '';
@@ -952,7 +960,8 @@ function fetchDECP(siren) {
       console.error('DECP API error:', err);
       loadEl.style.display = 'none';
       emptyEl.style.display = 'block';
-      emptyEl.querySelector('div:last-child').textContent = 'Erreur de connexion à l\'API DECP — réessayez plus tard.';
+      emptyEl.querySelector('div:nth-child(2)').textContent = 'Erreur de connexion';
+      emptyEl.querySelector('div:nth-child(3)').textContent = 'Impossible de joindre l\'API DECP (' + err.message + '). Ouvrez la console navigateur (F12) pour plus de détails.';
     });
 }
 
