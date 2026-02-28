@@ -121,6 +121,9 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 .form-label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
 .form-input { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 10px; font-family: var(--sans); font-size: 15px; background: white; transition: border-color 0.2s; outline: none; }
 .form-input:focus { border-color: var(--accent); }
+.form-input.input-error { border-color: #DC2626; }
+.form-input.input-ok { border-color: var(--green); }
+.field-error { font-size: 12px; color: #DC2626; margin-top: 4px; min-height: 16px; font-weight: 500; }
 .btn-block { width: 100%; padding: 16px; font-family: var(--sans); font-size: 15px; font-weight: 700; color: white; background: var(--accent); border: none; border-radius: 12px; cursor: pointer; transition: all 0.2s; }
 .btn-block:hover { background: #B34D2E; }
 .btn-block:disabled { background: var(--text-dim); cursor: not-allowed; }
@@ -366,13 +369,22 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
     <!-- STEP 1 -->
     <div id="step-1">
-      <h2>Votre structure</h2>
-      <div class="subtitle">Tapez le nom ou le SIRET de votre structure — on s'occupe du reste.</div>
+      <h2>Inscription</h2>
+      <div class="subtitle">Renseignez votre email et trouvez votre structure pour commencer.</div>
+
+      <div class="form-group">
+        <label class="form-label">Adresse email professionnelle</label>
+        <input class="form-input" type="email" placeholder="vous@votreagence.fr" id="input-email" autocomplete="email" oninput="checkStep1Ready()">
+        <div class="field-error" id="email-error"></div>
+      </div>
+
       <div class="form-group" style="position:relative;">
-        <label class="form-label">Nom ou numéro SIRET</label>
+        <label class="form-label">Nom ou numéro SIRET de votre structure</label>
         <input class="form-input" type="text" placeholder="Ex : Atelier Duval ou 842 567 391 00024" id="input-search" autocomplete="off" oninput="onSearchInput(this.value)">
         <div class="autocomplete-list" id="autocomplete-list"></div>
+        <div class="field-error" id="structure-error"></div>
       </div>
+
       <button class="btn-block" onclick="startEnrichment()" id="btn-search" disabled>🔍 Rechercher ma structure</button>
 
       <!-- Result — rempli dynamiquement -->
@@ -640,11 +652,12 @@ function escapeHtml(str) {
 
 function onSearchInput(val) {
   const list = document.getElementById('autocomplete-list');
-  const btn = document.getElementById('btn-search');
   const trimmed = val.trim();
 
   selectedStructure = null;
-  btn.disabled = true;
+  document.getElementById('structure-error').textContent = '';
+  document.getElementById('input-search').classList.remove('input-error', 'input-ok');
+  checkStep1Ready();
 
   if (searchTimeout) clearTimeout(searchTimeout);
 
@@ -739,7 +752,9 @@ document.addEventListener('click', function(e) {
       selectedStructure = s;
       document.getElementById('input-search').value = s.nom;
       document.getElementById('autocomplete-list').classList.remove('show');
-      document.getElementById('btn-search').disabled = false;
+      document.getElementById('structure-error').textContent = '';
+      document.getElementById('input-search').classList.remove('input-error');
+      checkStep1Ready();
     }
     return;
   }
@@ -748,14 +763,68 @@ document.addEventListener('click', function(e) {
   }
 });
 
+// ── Validation step 1 ──
+// Simulated already-registered data (in prod: API calls to your backend)
+var registeredEmails = ['marie.duval@atelier-duval.fr', 'contact@archipole.fr', 'test@test.com'];
+var registeredSirens = ['432109876']; // Archipole for demo purposes
+
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+function checkStep1Ready() {
+  var email = document.getElementById('input-email').value.trim();
+  var emailInput = document.getElementById('input-email');
+  var emailError = document.getElementById('email-error');
+  var btn = document.getElementById('btn-search');
+
+  // Reset email state
+  emailInput.classList.remove('input-error', 'input-ok');
+  emailError.textContent = '';
+
+  var emailOk = false;
+  if (email.length === 0) {
+    emailOk = false;
+  } else if (!isValidEmail(email)) {
+    emailInput.classList.add('input-error');
+    emailError.textContent = 'Adresse email invalide';
+  } else if (registeredEmails.indexOf(email.toLowerCase()) !== -1) {
+    emailInput.classList.add('input-error');
+    emailError.textContent = 'Cette adresse est déjà associée à un compte. Connectez-vous ou utilisez une autre adresse.';
+  } else {
+    emailInput.classList.add('input-ok');
+    emailOk = true;
+  }
+
+  btn.disabled = !(emailOk && selectedStructure);
+}
+
 // ── Onboarding enrichment ──
 function startEnrichment() {
   if (!selectedStructure) return;
+
+  // Check email one more time
+  var email = document.getElementById('input-email').value.trim();
+  if (!isValidEmail(email)) return;
+  if (registeredEmails.indexOf(email.toLowerCase()) !== -1) {
+    checkStep1Ready();
+    return;
+  }
+
+  // Check if structure is already registered
+  var structError = document.getElementById('structure-error');
+  var searchInput = document.getElementById('input-search');
+  if (registeredSirens.indexOf(selectedStructure.siren) !== -1) {
+    structError.textContent = 'Cette structure est déjà inscrite sur AssistAO. Connectez-vous avec l\'email associé.';
+    searchInput.classList.add('input-error');
+    return;
+  }
+
   const btn = document.getElementById('btn-search');
-  const input = document.getElementById('input-search');
   btn.disabled = true;
   btn.textContent = 'Recherche en cours...';
-  input.disabled = true;
+  searchInput.disabled = true;
+  document.getElementById('input-email').disabled = true;
   document.getElementById('profile-result').style.display = 'none';
 
   setTimeout(() => {
@@ -818,7 +887,9 @@ function goToStep(step) {
   }
 }
 
-// ── DECP API — Fetch marchés attribués ──
+// ── DECP API — Fetch marchés attribués via data.gouv.fr tabular API ──
+var DECP_API = 'https://tabular-api.data.gouv.fr/api/resources/22847056-61df-452d-837d-8b8ceadbfc52/data/';
+
 function fetchDECP(siren) {
   if (!siren) return;
 
@@ -833,21 +904,25 @@ function fetchDECP(siren) {
   resultsEl.style.display = 'none';
   listEl.innerHTML = '';
 
-  // DECP stores titulaire.id as SIRET (14 digits). We search by SIREN prefix (9 digits).
-  var sql = 'select objet, montant, [acheteur.nom], dateNotification, nature, [lieuExecution.nom] from decp where [titulaire.id] like \'' + siren + '%\' and donneesActuelles = 1 order by dateNotification desc limit 30';
-  var url = 'https://decp.info/db.json?sql=' + encodeURIComponent(sql) + '&_shape=array';
+  // Search by SIREN prefix in titulaire_id (SIRET = SIREN + NIC)
+  var url = DECP_API + '?titulaire_id__contains=' + encodeURIComponent(siren) +
+    '&donneesActuelles__exact=true' +
+    '&columns=objet,montant,acheteur_nom,dateNotification,nature,lieuExecution_nom' +
+    '&order_by=-dateNotification' +
+    '&page_size=30';
 
   fetch(url)
     .then(function(r) { return r.json(); })
-    .then(function(data) {
+    .then(function(resp) {
       loadEl.style.display = 'none';
+      var data = resp.data || [];
 
-      if (!data || !Array.isArray(data) || data.length === 0) {
+      if (data.length === 0) {
         emptyEl.style.display = 'block';
         return;
       }
 
-      countEl.textContent = data.length + ' marché' + (data.length > 1 ? 's' : '') + ' trouvé' + (data.length > 1 ? 's' : '') + ' dans les DECP';
+      countEl.textContent = (resp.meta && resp.meta.total ? resp.meta.total : data.length) + ' marché' + (data.length > 1 ? 's' : '') + ' trouvé' + (data.length > 1 ? 's' : '') + ' dans les DECP';
       resultsEl.style.display = 'block';
       resultsEl.classList.add('fade-up');
 
@@ -856,9 +931,9 @@ function fetchDECP(siren) {
         var m = data[i];
         var montant = m.montant ? formatMontant(m.montant) : 'N/C';
         var annee = m.dateNotification ? m.dateNotification.substring(0, 4) : '';
-        var acheteur = m['acheteur.nom'] || 'Acheteur inconnu';
+        var acheteur = m.acheteur_nom || 'Acheteur inconnu';
         var objet = m.objet || 'Sans objet';
-        var lieu = m['lieuExecution.nom'] || '';
+        var lieu = m.lieuExecution_nom || '';
         var nature = m.nature || '';
 
         html += '<div class="ref-card">' +
@@ -877,7 +952,7 @@ function fetchDECP(siren) {
       console.error('DECP API error:', err);
       loadEl.style.display = 'none';
       emptyEl.style.display = 'block';
-      document.querySelector('#decp-empty div:last-child').textContent = 'Erreur de connexion à decp.info — réessayez plus tard.';
+      emptyEl.querySelector('div:last-child').textContent = 'Erreur de connexion à l\'API DECP — réessayez plus tard.';
     });
 }
 
