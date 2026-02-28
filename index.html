@@ -381,29 +381,26 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
     <!-- STEP 2 -->
     <div id="step-2" style="display:none;">
-      <h2>Compétences & références</h2>
-      <div class="subtitle">Nous avons détecté ces informations. Validez ou ajustez.</div>
+      <h2>Références identifiées</h2>
+      <div class="subtitle">Marchés publics attribués à votre structure, issus des données DECP.</div>
 
-      <h4 style="font-size:14px; font-weight:700; margin-bottom:10px;">Compétences détectées</h4>
-      <div class="comp-grid" id="comp-grid">
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Architecture — Construction neuve <span class="src src-decp">DECP</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Réhabilitation <span class="src src-decp">DECP</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Équipements scolaires <span class="src src-decp">DECP</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Équipements culturels <span class="src src-m2bpo">M2BPO</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">HQE / Performance énergétique <span class="src src-web">WEB</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Logement collectif <span class="src src-decp">DECP</span></div>
-        <div class="comp-tag active" onclick="this.classList.toggle('active')">Urbanisme <span class="src src-web">WEB</span></div>
-        <div class="comp-tag" onclick="this.classList.toggle('active')">Extension / Surélévation <span class="src src-m2bpo">M2BPO</span></div>
+      <div id="decp-loading" style="text-align:center; padding:40px 0; color:var(--text-mid);">
+        <div style="font-size:24px; margin-bottom:10px;">⏳</div>
+        Recherche des marchés attribués…
       </div>
 
-      <h4 style="font-size:14px; font-weight:700; margin:20px 0 10px;">Références identifiées</h4>
-      <div class="ref-card"><div><h4>Groupe scolaire Jean Moulin — 8 classes</h4><p>Ville de Nantes · <span class="src src-decp" style="font-size:9px;">DECP</span></p></div><div class="ref-amount">4.2 M€<div class="ref-year">2023</div></div></div>
-      <div class="ref-card"><div><h4>Médiathèque Hélène Berr — 1 200 m²</h4><p>CC Erdre et Gesvres · <span class="src src-m2bpo" style="font-size:9px;">M2BPO</span></p></div><div class="ref-amount">2.8 M€<div class="ref-year">2022</div></div></div>
-      <div class="ref-card"><div><h4>Restructuration collège Jules Verne</h4><p>Département Loire-Atlantique · <span class="src src-decp" style="font-size:9px;">DECP</span></p></div><div class="ref-amount">6.1 M€<div class="ref-year">2021</div></div></div>
-      <div class="ref-card"><div><h4>56 logements BBC — ZAC Prairie au Duc</h4><p>Nantes Métropole Habitat · <span class="src src-decp" style="font-size:9px;">DECP</span></p></div><div class="ref-amount">3.5 M€<div class="ref-year">2020</div></div></div>
-      <div class="ref-card"><div><h4>Résidence séniors Les Tilleuls — 42 logements</h4><p>Atlantique Habitations · <span class="src src-m2bpo" style="font-size:9px;">M2BPO</span></p></div><div class="ref-amount">2.1 M€<div class="ref-year">2019</div></div></div>
+      <div id="decp-empty" style="display:none; text-align:center; padding:40px 0;">
+        <div style="font-size:32px; margin-bottom:10px;">📭</div>
+        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px;">Aucun marché trouvé dans les DECP</div>
+        <div style="font-size:13px; color:var(--text-mid);">Votre structure n'apparaît pas encore dans les données essentielles de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.</div>
+      </div>
 
-      <button class="btn-block" style="margin-top:20px;" onclick="goToStep(3)">Valider mes compétences et références →</button>
+      <div id="decp-results" style="display:none;">
+        <div id="decp-count" style="font-size:13px; color:var(--text-mid); margin-bottom:14px;"></div>
+        <div id="decp-list"></div>
+      </div>
+
+      <button class="btn-block" style="margin-top:20px;" onclick="goToStep(3)">Continuer →</button>
     </div>
 
     <!-- STEP 3 -->
@@ -796,28 +793,100 @@ function startEnrichment() {
 
 // ── Step navigation ──
 function goToStep(step) {
-  // Hide all steps
   for (let i = 1; i <= 3; i++) {
     document.getElementById('step-' + i).style.display = 'none';
   }
-  // Show target step
   document.getElementById('step-' + step).style.display = 'block';
   document.getElementById('step-' + step).classList.add('fade-in');
 
-  // Update indicators
   for (let i = 1; i <= 3; i++) {
     const dot = document.getElementById('dot-' + i);
     dot.classList.remove('active', 'done', 'pending');
     if (i < step) { dot.classList.add('done'); dot.textContent = '✓'; }
     else if (i === step) dot.classList.add('active');
     else dot.classList.add('pending');
-
     if (i < 3) {
       const line = document.getElementById('line-' + i);
       line.classList.toggle('done', i < step);
     }
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Trigger DECP fetch when entering step 2
+  if (step === 2 && selectedStructure) {
+    fetchDECP(selectedStructure.siren);
+  }
+}
+
+// ── DECP API — Fetch marchés attribués ──
+function fetchDECP(siren) {
+  if (!siren) return;
+
+  var loadEl = document.getElementById('decp-loading');
+  var emptyEl = document.getElementById('decp-empty');
+  var resultsEl = document.getElementById('decp-results');
+  var listEl = document.getElementById('decp-list');
+  var countEl = document.getElementById('decp-count');
+
+  loadEl.style.display = 'block';
+  emptyEl.style.display = 'none';
+  resultsEl.style.display = 'none';
+  listEl.innerHTML = '';
+
+  // DECP stores titulaire.id as SIRET (14 digits). We search by SIREN prefix (9 digits).
+  var sql = 'select objet, montant, [acheteur.nom], dateNotification, nature, [lieuExecution.nom] from decp where [titulaire.id] like \'' + siren + '%\' and donneesActuelles = 1 order by dateNotification desc limit 30';
+  var url = 'https://decp.info/db.json?sql=' + encodeURIComponent(sql) + '&_shape=array';
+
+  fetch(url)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      loadEl.style.display = 'none';
+
+      if (!data || !Array.isArray(data) || data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      countEl.textContent = data.length + ' marché' + (data.length > 1 ? 's' : '') + ' trouvé' + (data.length > 1 ? 's' : '') + ' dans les DECP';
+      resultsEl.style.display = 'block';
+      resultsEl.classList.add('fade-up');
+
+      var html = '';
+      for (var i = 0; i < data.length; i++) {
+        var m = data[i];
+        var montant = m.montant ? formatMontant(m.montant) : 'N/C';
+        var annee = m.dateNotification ? m.dateNotification.substring(0, 4) : '';
+        var acheteur = m['acheteur.nom'] || 'Acheteur inconnu';
+        var objet = m.objet || 'Sans objet';
+        var lieu = m['lieuExecution.nom'] || '';
+        var nature = m.nature || '';
+
+        html += '<div class="ref-card">' +
+          '<div style="flex:1; min-width:0;">' +
+            '<h4>' + escapeHtml(objet.length > 100 ? objet.substring(0, 100) + '…' : objet) + '</h4>' +
+            '<p>' + escapeHtml(acheteur) + (lieu ? ' · ' + escapeHtml(lieu) : '') +
+            (nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(nature) + '</span>' : '') +
+            ' <span class="src src-decp" style="font-size:9px;">DECP</span></p>' +
+          '</div>' +
+          '<div class="ref-amount">' + montant + (annee ? '<div class="ref-year">' + annee + '</div>' : '') + '</div>' +
+        '</div>';
+      }
+      listEl.innerHTML = html;
+    })
+    .catch(function(err) {
+      console.error('DECP API error:', err);
+      loadEl.style.display = 'none';
+      emptyEl.style.display = 'block';
+      document.querySelector('#decp-empty div:last-child').textContent = 'Erreur de connexion à decp.info — réessayez plus tard.';
+    });
+}
+
+function formatMontant(val) {
+  var n = parseFloat(val);
+  if (isNaN(n)) return 'N/C';
+  if (n >= 1000000) return (n / 1000000).toFixed(1).replace('.0', '') + ' M€';
+  if (n >= 1000) return Math.round(n / 1000) + ' k€';
+  return Math.round(n) + ' €';
 }
 </script>
 </body>
