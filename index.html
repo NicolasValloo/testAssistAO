@@ -125,17 +125,6 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 .btn-block:hover { background: #B34D2E; }
 .btn-block:disabled { background: var(--text-dim); cursor: not-allowed; }
 
-/* Loading sources */
-.loading-sources { margin: 24px 0; }
-.source-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.source-item:last-child { border: none; }
-.source-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.source-dot.loading { background: var(--yellow); animation: pulse 1s infinite; }
-.source-dot.done { background: var(--green); }
-.source-dot.error { background: #DC2626; }
-.source-name { font-size: 13px; font-weight: 600; flex: 1; }
-.source-status { font-size: 11px; font-family: var(--mono); color: var(--text-dim); }
-
 /* Profile card */
 .profile-result { background: white; border: 1.5px solid var(--green); border-radius: 14px; padding: 24px; margin: 24px 0; }
 .profile-result h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
@@ -385,14 +374,6 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
         <div class="autocomplete-list" id="autocomplete-list"></div>
       </div>
       <button class="btn-block" onclick="startEnrichment()" id="btn-search" disabled>🔍 Rechercher ma structure</button>
-
-      <!-- Loading state -->
-      <div class="loading-sources" id="loading-sources" style="display:none;">
-        <div class="source-item"><div class="source-dot loading" id="src-1"></div><div class="source-name">Annuaire Entreprises (data.gouv)</div><div class="source-status" id="src-1-status">Recherche...</div></div>
-        <div class="source-item"><div class="source-dot loading" id="src-2"></div><div class="source-name">CNOA — Ordre des Architectes</div><div class="source-status" id="src-2-status">Recherche...</div></div>
-        <div class="source-item"><div class="source-dot loading" id="src-3"></div><div class="source-name">OPQIBI — Qualifications BET</div><div class="source-status" id="src-3-status">Recherche...</div></div>
-        <div class="source-item"><div class="source-dot loading" id="src-4"></div><div class="source-name">DECP — Marchés attribués</div><div class="source-status" id="src-4-status">Recherche...</div></div>
-      </div>
 
       <!-- Result — rempli dynamiquement -->
       <div class="profile-result" id="profile-result" style="display:none;"></div>
@@ -770,7 +751,7 @@ document.addEventListener('click', function(e) {
   }
 });
 
-// ── Onboarding enrichment simulation ──
+// ── Onboarding enrichment ──
 function startEnrichment() {
   if (!selectedStructure) return;
   const btn = document.getElementById('btn-search');
@@ -779,33 +760,8 @@ function startEnrichment() {
   btn.textContent = 'Recherche en cours...';
   input.disabled = true;
   document.getElementById('profile-result').style.display = 'none';
-  // Reset loading dots
-  for (var i = 1; i <= 4; i++) {
-    document.getElementById('src-' + i).className = 'source-dot loading';
-    document.getElementById('src-' + i + '-status').textContent = 'Recherche...';
-  }
-  document.getElementById('loading-sources').style.display = 'block';
 
-  const sources = [
-    { id: 1, delay: 800, status: '12 champs récupérés' },
-    { id: 2, delay: 1600, status: 'Inscrite ✓' },
-    { id: 3, delay: 2200, status: 'Non référencée' },
-    { id: 4, delay: 3000, status: '7 marchés trouvés' },
-  ];
-
-  sources.forEach(s => {
-    setTimeout(() => {
-      document.getElementById('src-' + s.id).classList.remove('loading');
-      document.getElementById('src-' + s.id).classList.add(s.id === 3 ? 'error' : 'done');
-      document.getElementById('src-' + s.id + '-status').textContent = s.status;
-    }, s.delay);
-  });
-
-  // Reset loading dots for next time
   setTimeout(() => {
-    document.getElementById('loading-sources').style.display = 'none';
-
-    // Build profile card from real API data
     var s = selectedStructure;
     var activite = s.activite_code ? (s.activite_code + ' — ' + s.activite_label) : (s.activite_label || 'Non renseigné');
     var dirigeant = s.dirigeant_nom ? (s.dirigeant_nom + (s.dirigeant_qualite ? ' (' + s.dirigeant_qualite + ')' : '')) : 'Non renseigné';
@@ -835,7 +791,7 @@ function startEnrichment() {
     document.getElementById('profile-result').style.display = 'block';
     document.getElementById('profile-result').classList.add('fade-up');
     btn.style.display = 'none';
-  }, 3800);
+  }, 800);
 }
 
 // ── Step navigation ──
