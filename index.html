@@ -921,7 +921,9 @@ function fetchDECP(siren) {
   listEl.innerHTML = '';
 
   var where = 'titulaire_id_titulaire LIKE "' + siren + '%"';
-  var url = DECP_API + '?where=' + encodeURIComponent(where) + '&limit=30&order_by=date_notification_marche%20DESC';
+  var url = DECP_API + '?where=' + encodeURIComponent(where) + '&limit=30';
+
+  console.log('DECP fetch:', url);
 
   fetch(url)
     .then(function(r) {
