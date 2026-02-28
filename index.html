@@ -920,8 +920,8 @@ function fetchDECP(siren) {
   resultsEl.style.display = 'none';
   listEl.innerHTML = '';
 
-  var where = 'titulaire_id_titulaire LIKE "' + siren + '%"';
-  var url = DECP_API + '?where=' + encodeURIComponent(where) + '&limit=30';
+  // Exact same URL format as the debug page that worked
+  var url = DECP_API + '?where=titulaire_id_titulaire%20LIKE%20%22' + siren + '%25%22&limit=30';
 
   console.log('DECP fetch:', url);
 
