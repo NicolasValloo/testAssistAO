@@ -394,37 +394,37 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
     <!-- STEP 2 -->
     <div id="step-2" style="display:none;">
       <h2>Compétences & références</h2>
-      <div class="subtitle">Informations détectées automatiquement. Cochez les références à intégrer à votre profil.</div>
+      <div class="subtitle">Consultez vos données publiques et indiquez celles à intégrer à votre profil.</div>
 
       <!-- Compétences détectées via NAF -->
-      <div id="competences-section" style="display:none; margin-bottom:24px;">
+      <div id="competences-section" style="margin-bottom:24px;">
         <h4 style="font-size:14px; font-weight:700; margin-bottom:10px;">Compétences détectées</h4>
         <div id="competences-list" class="comp-grid"></div>
-        <div id="opqibi-link" style="display:none; margin-top:10px; padding:12px 16px; background:var(--accent-light); border-radius:8px; font-size:13px;">
-          🏗️ Votre structure relève de l'ingénierie (NAF 7112B). <a id="opqibi-href" href="#" target="_blank" style="color:var(--accent); font-weight:600;">Consultez vos qualifications OPQIBI →</a>
+      </div>
+
+      <!-- OPQIBI link (7112B, 7112A, 7490A) -->
+      <div id="opqibi-block" style="display:none; margin-bottom:20px;">
+        <div style="padding:16px; background:var(--card); border:1px solid var(--border); border-radius:10px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <span style="font-size:20px;">🏗️</span>
+            <h4 style="font-size:14px; font-weight:700; margin:0;">Qualifications OPQIBI</h4>
+          </div>
+          <p style="font-size:13px; color:var(--text-mid); margin:0 0 10px;">Votre code NAF indique une activité d'ingénierie. Si votre structure est qualifiée OPQIBI, vous pouvez consulter et importer vos qualifications.</p>
+          <a id="opqibi-href" href="#" target="_blank" style="display:inline-block; padding:8px 16px; background:var(--accent); color:#fff; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Rechercher sur opqibi.com →</a>
         </div>
       </div>
 
-      <!-- Références DECP -->
-      <h4 style="font-size:14px; font-weight:700; margin-bottom:10px;">Marchés publics attribués</h4>
-
-      <div id="decp-loading" style="text-align:center; padding:40px 0; color:var(--text-mid);">
-        <div style="font-size:24px; margin-bottom:10px;">⏳</div>
-        Recherche des marchés attribués…
-      </div>
-
-      <div id="decp-empty" style="display:none; text-align:center; padding:40px 0;">
-        <div style="font-size:32px; margin-bottom:10px;">📭</div>
-        <div style="font-size:15px; font-weight:600; color:var(--text); margin-bottom:6px;">Aucun marché trouvé</div>
-        <div style="font-size:13px; color:var(--text-mid);">Votre structure n'apparaît pas encore dans les données de la commande publique. Vous pourrez ajouter vos références manuellement par la suite.</div>
-      </div>
-
-      <div id="decp-results" style="display:none;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-          <div id="decp-count" style="font-size:13px; color:var(--text-mid);"></div>
-          <label style="font-size:12px; color:var(--accent); cursor:pointer; font-weight:600;" onclick="toggleAllDecp()"><span id="toggle-all-label">Tout sélectionner</span></label>
+      <!-- DECP link -->
+      <div style="margin-bottom:20px;">
+        <div style="padding:16px; background:var(--card); border:1px solid var(--border); border-radius:10px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+            <span style="font-size:20px;">📋</span>
+            <h4 style="font-size:14px; font-weight:700; margin:0;">Marchés publics attribués</h4>
+          </div>
+          <p style="font-size:13px; color:var(--text-mid); margin:0 0 10px;">Consultez les marchés publics remportés par votre structure sur decp.info. Vous pourrez ensuite les ajouter comme références.</p>
+          <a id="decp-href" href="#" target="_blank" style="display:inline-block; padding:8px 16px; background:var(--accent); color:#fff; border-radius:6px; font-size:13px; font-weight:600; text-decoration:none;">Voir mes marchés sur decp.info →</a>
+          <div id="decp-no-siret" style="display:none; margin-top:8px; font-size:12px; color:var(--text-mid);">Le lien sera disponible une fois votre structure sélectionnée.</div>
         </div>
-        <div id="decp-list"></div>
       </div>
 
       <button class="btn-block" style="margin-top:20px;" onclick="goToStep(3)">Continuer →</button>
@@ -896,125 +896,67 @@ function goToStep(step) {
   }
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  // Trigger DECP fetch when entering step 2
+  // Populate links and competences when entering step 2
   if (step === 2 && selectedStructure) {
-    fetchDECP(selectedStructure.siren);
-    detectCompetences(selectedStructure.activite_code);
+    populateStep2();
   }
 }
 
-// ── DECP API — data.economie.gouv.fr (CORS OK) ──
-var DECP_API = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/decp-v3-marches-valides/records';
+// ── Step 2 : populate links and competences ──
+function populateStep2() {
+  if (!selectedStructure) return;
 
-function fetchDECP(siren) {
-  if (!siren) return;
+  var siret = selectedStructure.siret || '';
+  var siren = selectedStructure.siren || '';
+  var naf = (selectedStructure.activite_code || '').replace(/[\.\s\-]/g, '').toUpperCase();
 
-  var loadEl = document.getElementById('decp-loading');
-  var emptyEl = document.getElementById('decp-empty');
-  var resultsEl = document.getElementById('decp-results');
-  var listEl = document.getElementById('decp-list');
-  var countEl = document.getElementById('decp-count');
+  // DECP link
+  var decpLink = document.getElementById('decp-href');
+  if (siret) {
+    decpLink.href = 'https://decp.info/titulaires/' + siret;
+  } else if (siren) {
+    decpLink.href = 'https://decp.info/titulaires/' + siren;
+  }
 
-  loadEl.style.display = 'block';
-  emptyEl.style.display = 'none';
-  resultsEl.style.display = 'none';
-  listEl.innerHTML = '';
+  // OPQIBI block — shown for NAF 7112B, 7112A, 7490A
+  var opqibiBlock = document.getElementById('opqibi-block');
+  var opqibiNafs = ['7112B', '7112A', '7490A'];
+  if (opqibiNafs.indexOf(naf) !== -1 && siren) {
+    opqibiBlock.style.display = 'block';
+    document.getElementById('opqibi-href').href = 'https://www.opqibi.com/recherche-resultat?Siren=' + siren;
+  } else {
+    opqibiBlock.style.display = 'none';
+  }
 
-  // Exact same URL format as the debug page that worked
-  var url = DECP_API + '?where=titulaire_id_titulaire%20LIKE%20%22' + siren + '%25%22&limit=30';
-
-  console.log('DECP fetch:', url);
-
-  fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(resp) {
-      loadEl.style.display = 'none';
-      var data = resp.results || [];
-
-      if (data.length === 0) {
-        emptyEl.style.display = 'block';
-        return;
-      }
-
-      var total = resp.total_count || data.length;
-      countEl.textContent = total + ' marché' + (total > 1 ? 's' : '') + ' trouvé' + (total > 1 ? 's' : '') + (total > 30 ? ' (30 plus récents affichés)' : '');
-      resultsEl.style.display = 'block';
-      resultsEl.classList.add('fade-up');
-
-      var html = '';
-      for (var i = 0; i < data.length; i++) {
-        var m = data[i];
-        var montant = m.montant_marche ? formatMontant(m.montant_marche) : (m.montant ? formatMontant(m.montant) : 'N/C');
-        var dateNotif = m.date_notification_marche || m.datenotification || '';
-        var annee = dateNotif ? String(dateNotif).substring(0, 4) : '';
-        var acheteur = m.acheteur_nom_acheteur || m.nom_acheteur || m.acheteur_nom || 'Acheteur public';
-        var objet = m.objet_marche || m.objet || 'Sans objet';
-        var nature = m.nature_marche || m.nature || '';
-
-        html += '<label class="ref-card" style="cursor:pointer; display:flex; align-items:flex-start;">' +
-          '<input type="checkbox" class="decp-check" checked style="margin-right:12px; margin-top:4px; accent-color:var(--accent); width:18px; height:18px; flex-shrink:0;">' +
-          '<div style="flex:1; min-width:0;">' +
-            '<h4>' + escapeHtml(objet.length > 120 ? objet.substring(0, 120) + '…' : objet) + '</h4>' +
-            '<p>' + escapeHtml(acheteur) +
-            (nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(nature) + '</span>' : '') +
-            '</p>' +
-          '</div>' +
-          '<div class="ref-amount">' + montant + (annee ? '<div class="ref-year">' + annee + '</div>' : '') + '</div>' +
-        '</label>';
-      }
-      listEl.innerHTML = html;
-    })
-    .catch(function(err) {
-      console.error('DECP API error:', err);
-      loadEl.style.display = 'none';
-      emptyEl.style.display = 'block';
-      emptyEl.querySelector('div:nth-child(2)').textContent = 'Erreur de connexion';
-      emptyEl.querySelector('div:nth-child(3)').textContent = 'Impossible de joindre l\'API (' + err.message + ')';
-    });
-}
-
-function toggleAllDecp() {
-  var checks = document.querySelectorAll('.decp-check');
-  var allChecked = Array.prototype.every.call(checks, function(c) { return c.checked; });
-  checks.forEach(function(c) { c.checked = !allChecked; });
-  document.getElementById('toggle-all-label').textContent = allChecked ? 'Tout sélectionner' : 'Tout désélectionner';
-}
-
-// ── Compétences par code NAF ──
-function detectCompetences(naf) {
-  if (!naf) return;
+  // Competences from NAF
   var section = document.getElementById('competences-section');
   var list = document.getElementById('competences-list');
-  var opqibiLink = document.getElementById('opqibi-link');
-
-  var nafClean = naf.replace(/[\.\s\-]/g, '').toUpperCase();
   var tags = [];
 
-  if (nafClean === '7111Z') {
+  if (naf === '7111Z') {
     tags = ['Architecte', 'Maîtrise d\'œuvre', 'Conception architecturale', 'Permis de construire'];
-  } else if (nafClean === '7112B') {
+  } else if (naf === '7112B') {
     tags = ['Ingénierie', 'Études techniques', 'Maîtrise d\'œuvre technique'];
-    opqibiLink.style.display = 'block';
-    document.getElementById('opqibi-href').href = 'https://www.opqibi.com/recherche-resultat?Siren=' + (selectedStructure ? selectedStructure.siren : '');
-  } else if (nafClean === '7112A') {
+  } else if (naf === '7112A') {
     tags = ['Ingénierie', 'Activité de métreur', 'Études techniques'];
+  } else if (naf === '7490A') {
+    tags = ['Conseil', 'Activités spécialisées', 'Ingénierie'];
   }
 
-  if (tags.length === 0 && selectedStructure && selectedStructure.activite_label) {
+  if (tags.length === 0 && selectedStructure.activite_label) {
     tags = [selectedStructure.activite_label];
   }
 
-  if (tags.length === 0) { section.style.display = 'none'; return; }
-
-  section.style.display = 'block';
-  var html = '';
-  for (var i = 0; i < tags.length; i++) {
-    html += '<div class="comp-tag active" onclick="this.classList.toggle(\'active\')">' + escapeHtml(tags[i]) + '</div>';
+  if (tags.length > 0) {
+    section.style.display = 'block';
+    var html = '';
+    for (var i = 0; i < tags.length; i++) {
+      html += '<div class="comp-tag active" onclick="this.classList.toggle(\'active\')">' + escapeHtml(tags[i]) + '</div>';
+    }
+    list.innerHTML = html;
+  } else {
+    section.style.display = 'none';
   }
-  list.innerHTML = html;
 }
 
 function formatMontant(val) {
