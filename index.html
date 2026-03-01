@@ -163,9 +163,20 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
 /* ═══ DASHBOARD ═══ */
 .dash { padding: 80px 28px 60px; max-width: 1100px; margin: 0 auto; }
-.dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 28px; }
+.dash-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; }
 .dash-header h1 { font-family: var(--serif); font-size: 28px; letter-spacing: -0.5px; }
 .dash-header p { font-size: 13px; color: var(--text-mid); margin-top: 4px; }
+
+/* Dashboard tabs */
+.dash-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
+.dash-tab { padding: 12px 24px; font-family: var(--sans); font-size: 14px; font-weight: 600; color: var(--text-mid); background: none; border: none; cursor: pointer; position: relative; transition: color 0.2s; }
+.dash-tab:hover { color: var(--text); }
+.dash-tab.active { color: var(--accent); }
+.dash-tab.active::after { content: ''; position: absolute; bottom: -2px; left: 0; right: 0; height: 2px; background: var(--accent); }
+.dash-tab .tab-icon { margin-right: 6px; }
+.dash-tab-content { display: none; }
+.dash-tab-content.active { display: block; }
+
 .dash-filters { display: flex; gap: 8px; }
 .filter-btn { font-family: var(--sans); font-size: 12px; font-weight: 600; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; transition: all 0.15s; color: var(--text-mid); }
 .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
@@ -452,10 +463,6 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
         <select class="pref-select"><option>Département</option><option selected>Région</option><option>National</option><option>International</option></select>
       </div>
       <div class="pref-row">
-        <div><div class="pref-label">Fréquence des alertes</div><div class="pref-desc">Digest email des marchés recommandés</div></div>
-        <select class="pref-select"><option selected>Quotidien (8h)</option><option>Bi-hebdomadaire</option><option>Hebdomadaire</option></select>
-      </div>
-      <div class="pref-row">
         <div><div class="pref-label">Score minimum</div><div class="pref-desc">Seuil de pertinence pour les alertes</div></div>
         <select class="pref-select"><option>50%</option><option>60%</option><option selected>70%</option><option>80%</option><option>90%</option></select>
       </div>
@@ -472,80 +479,261 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
   <div class="dash">
     <div class="dash-header">
       <div>
-        <h1>Marchés recommandés</h1>
-        <p>Bonjour Marie — voici vos meilleures opportunités cette semaine.</p>
-      </div>
-      <div class="dash-filters">
-        <button class="filter-btn active">Tous</button>
-        <button class="filter-btn" onclick="this.classList.toggle('active')">Éducation</button>
-        <button class="filter-btn" onclick="this.classList.toggle('active')">Culture</button>
-        <button class="filter-btn" onclick="this.classList.toggle('active')">Logement</button>
+        <h1>AssistAO</h1>
+        <p>Bonjour Marie — votre assistant appels d'offres.</p>
       </div>
     </div>
 
-    <div class="stats-bar">
-      <div class="stat-card"><div class="stat-val" style="color:var(--accent)">7</div><div class="stat-label">Marchés cette semaine</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--green)">83%</div><div class="stat-label">Score moyen</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:var(--blue)">2</div><div class="stat-label">Dossiers en cours</div></div>
-      <div class="stat-card"><div class="stat-val" style="color:#DC2626">3j</div><div class="stat-label">Prochaine date limite</div></div>
+    <!-- 3 onglets -->
+    <div class="dash-tabs">
+      <button class="dash-tab active" onclick="switchTab('marche', this)"><span class="tab-icon">🎯</span>Matching Marché</button>
+      <button class="dash-tab" onclick="switchTab('equipe', this)"><span class="tab-icon">👥</span>Matching Équipe</button>
+      <button class="dash-tab" onclick="switchTab('redaction', this)"><span class="tab-icon">✍️</span>Rédaction</button>
     </div>
 
-    <div class="marche-list">
-      <div class="marche-card new" onclick="showPage('detail')">
-        <div class="marche-score score-green"><div class="score-num">94%</div><div class="score-label">match</div></div>
-        <div class="marche-body">
-          <h3>Restructuration et extension du groupe scolaire Victor Hugo — 12 classes</h3>
-          <div class="marche-meta">🏛️ Ville de Bordeaux · 📍 Bordeaux, Gironde · MOE</div>
-          <div class="marche-tags"><span class="tag tag-domain">Éducation</span><span class="tag tag-type">Réhabilitation</span><span class="tag tag-top">⭐ Top match</span></div>
-          <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> 3 références scolaires similaires (dont Jean Moulin 2023, 4.2M€). Zone Nouvelle-Aquitaine couverte. Montant dans votre fourchette habituelle.</div>
-        </div>
-        <div class="marche-right"><div class="marche-amount">5.8 M€</div><div class="marche-deadline urgent">⏰ 15/04/2026</div></div>
+    <!-- ═══ TAB 1 : MATCHING MARCHÉ ═══ -->
+    <div class="dash-tab-content active" id="tab-marche">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-val" style="color:var(--accent)">7</div><div class="stat-label">Marchés cette semaine</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--green)">83%</div><div class="stat-label">Score moyen</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--blue)">2</div><div class="stat-label">Dossiers en cours</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:#DC2626">3j</div><div class="stat-label">Prochaine date limite</div></div>
       </div>
 
-      <div class="marche-card new" onclick="showPage('detail')">
-        <div class="marche-score score-green"><div class="score-num">87%</div><div class="score-label">match</div></div>
-        <div class="marche-body">
-          <h3>Construction d'une médiathèque intercommunale — 1 800 m² SHON</h3>
-          <div class="marche-meta">🏛️ CC Pays de Retz · 📍 Pornic, Loire-Atlantique · MOE</div>
-          <div class="marche-tags"><span class="tag tag-domain">Culture</span><span class="tag tag-type">Neuf</span></div>
-          <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence médiathèque Hélène Berr (2022, même programme). Proximité géographique (65 km). Compétence HQE pertinente.</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+        <div class="dash-filters">
+          <button class="filter-btn active">Tous</button>
+          <button class="filter-btn" onclick="this.classList.toggle('active')">Éducation</button>
+          <button class="filter-btn" onclick="this.classList.toggle('active')">Culture</button>
+          <button class="filter-btn" onclick="this.classList.toggle('active')">Logement</button>
         </div>
-        <div class="marche-right"><div class="marche-amount">3.2 M€</div><div class="marche-deadline">⏰ 22/04/2026</div></div>
       </div>
 
-      <div class="marche-card" onclick="showPage('detail')">
-        <div class="marche-score score-green"><div class="score-num">82%</div><div class="score-label">match</div></div>
-        <div class="marche-body">
-          <h3>Réhabilitation énergétique EHPAD Les Glycines — 80 lits</h3>
-          <div class="marche-meta">🏛️ Département du Finistère · 📍 Quimper · MOE</div>
-          <div class="marche-tags"><span class="tag tag-domain">Santé</span><span class="tag tag-type">Réhabilitation</span></div>
-          <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Expertise réhabilitation confirmée. Compétence HQE/performance énergétique. Distance 250 km (dans votre rayon région).</div>
+      <div class="marche-list">
+        <div class="marche-card new" onclick="showPage('detail')">
+          <div class="marche-score score-green"><div class="score-num">94%</div><div class="score-label">match</div></div>
+          <div class="marche-body">
+            <h3>Restructuration et extension du groupe scolaire Victor Hugo — 12 classes</h3>
+            <div class="marche-meta">🏛️ Ville de Bordeaux · 📍 Bordeaux, Gironde · MOE</div>
+            <div class="marche-tags"><span class="tag tag-domain">Éducation</span><span class="tag tag-type">Réhabilitation</span><span class="tag tag-top">⭐ Top match</span></div>
+            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> 3 références scolaires similaires (dont Jean Moulin 2023, 4.2M€). Zone Nouvelle-Aquitaine couverte. Montant dans votre fourchette habituelle.</div>
+          </div>
+          <div class="marche-right"><div class="marche-amount">5.8 M€</div><div class="marche-deadline urgent">⏰ 15/04/2026</div></div>
         </div>
-        <div class="marche-right"><div class="marche-amount">2.4 M€</div><div class="marche-deadline">⏰ 08/04/2026</div></div>
-      </div>
 
-      <div class="marche-card" onclick="showPage('detail')">
-        <div class="marche-score score-yellow"><div class="score-num">76%</div><div class="score-label">match</div></div>
-        <div class="marche-body">
-          <h3>Construction de 48 logements collectifs BBC — ZAC des Perrières</h3>
-          <div class="marche-meta">🏛️ Nantes Métropole Habitat · 📍 Rezé, Loire-Atlantique · MOE</div>
-          <div class="marche-tags"><span class="tag tag-domain">Logement</span><span class="tag tag-type">Neuf</span></div>
-          <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence ZAC Prairie au Duc (56 logements, 2020). Très proche géographiquement (8 km). Programme légèrement différent.</div>
+        <div class="marche-card new" onclick="showPage('detail')">
+          <div class="marche-score score-green"><div class="score-num">87%</div><div class="score-label">match</div></div>
+          <div class="marche-body">
+            <h3>Construction d'une médiathèque intercommunale — 1 800 m² SHON</h3>
+            <div class="marche-meta">🏛️ CC Pays de Retz · 📍 Pornic, Loire-Atlantique · MOE</div>
+            <div class="marche-tags"><span class="tag tag-domain">Culture</span><span class="tag tag-type">Neuf</span></div>
+            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence médiathèque Hélène Berr (2022, même programme). Proximité géographique (65 km). Compétence HQE pertinente.</div>
+          </div>
+          <div class="marche-right"><div class="marche-amount">3.2 M€</div><div class="marche-deadline">⏰ 22/04/2026</div></div>
         </div>
-        <div class="marche-right"><div class="marche-amount">4.1 M€</div><div class="marche-deadline">⏰ 30/04/2026</div></div>
-      </div>
 
-      <div class="marche-card" onclick="showPage('detail')">
-        <div class="marche-score score-yellow"><div class="score-num">71%</div><div class="score-label">match</div></div>
-        <div class="marche-body">
-          <h3>Concours de MOE — Pôle petite enfance multi-accueil 60 berceaux</h3>
-          <div class="marche-meta">🏛️ Ville de Saint-Nazaire · 📍 Saint-Nazaire, Loire-Atlantique · Concours</div>
-          <div class="marche-tags"><span class="tag tag-domain">Petite enfance</span><span class="tag tag-type">Concours</span></div>
-          <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Proximité géographique (60 km). Compétence construction neuve. ⚠ Pas de référence petite enfance directe.</div>
+        <div class="marche-card" onclick="showPage('detail')">
+          <div class="marche-score score-green"><div class="score-num">82%</div><div class="score-label">match</div></div>
+          <div class="marche-body">
+            <h3>Réhabilitation énergétique EHPAD Les Glycines — 80 lits</h3>
+            <div class="marche-meta">🏛️ Département du Finistère · 📍 Quimper · MOE</div>
+            <div class="marche-tags"><span class="tag tag-domain">Santé</span><span class="tag tag-type">Réhabilitation</span></div>
+            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Expertise réhabilitation confirmée. Compétence HQE/performance énergétique. Distance 250 km (dans votre rayon région).</div>
+          </div>
+          <div class="marche-right"><div class="marche-amount">2.4 M€</div><div class="marche-deadline">⏰ 08/04/2026</div></div>
         </div>
-        <div class="marche-right"><div class="marche-amount">1.9 M€</div><div class="marche-deadline">⏰ 12/05/2026</div></div>
+
+        <div class="marche-card" onclick="showPage('detail')">
+          <div class="marche-score score-yellow"><div class="score-num">76%</div><div class="score-label">match</div></div>
+          <div class="marche-body">
+            <h3>Construction de 48 logements collectifs BBC — ZAC des Perrières</h3>
+            <div class="marche-meta">🏛️ Nantes Métropole Habitat · 📍 Rezé, Loire-Atlantique · MOE</div>
+            <div class="marche-tags"><span class="tag tag-domain">Logement</span><span class="tag tag-type">Neuf</span></div>
+            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence ZAC Prairie au Duc (56 logements, 2020). Très proche géographiquement (8 km). Programme légèrement différent.</div>
+          </div>
+          <div class="marche-right"><div class="marche-amount">4.1 M€</div><div class="marche-deadline">⏰ 30/04/2026</div></div>
+        </div>
+
+        <div class="marche-card" onclick="showPage('detail')">
+          <div class="marche-score score-yellow"><div class="score-num">71%</div><div class="score-label">match</div></div>
+          <div class="marche-body">
+            <h3>Concours de MOE — Pôle petite enfance multi-accueil 60 berceaux</h3>
+            <div class="marche-meta">🏛️ Ville de Saint-Nazaire · 📍 Saint-Nazaire, Loire-Atlantique · Concours</div>
+            <div class="marche-tags"><span class="tag tag-domain">Petite enfance</span><span class="tag tag-type">Concours</span></div>
+            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Proximité géographique (60 km). Compétence construction neuve. ⚠ Pas de référence petite enfance directe.</div>
+          </div>
+          <div class="marche-right"><div class="marche-amount">1.9 M€</div><div class="marche-deadline">⏰ 12/05/2026</div></div>
+        </div>
       </div>
     </div>
+
+    <!-- ═══ TAB 2 : MATCHING ÉQUIPE ═══ -->
+    <div class="dash-tab-content" id="tab-equipe">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-val" style="color:var(--accent)">12</div><div class="stat-label">Partenaires dans le réseau</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--green)">5</div><div class="stat-label">Collaborations passées</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--blue)">3</div><div class="stat-label">Équipes suggérées</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--purple)">8</div><div class="stat-label">Compétences couvertes</div></div>
+      </div>
+
+      <p style="font-size:13px; color:var(--text-mid); margin-bottom:18px;">Sélectionnez un marché pour voir l'équipe optimale suggérée par l'IA, basée sur les compétences requises, vos collaborations passées et la disponibilité.</p>
+
+      <!-- Equipe pour Victor Hugo -->
+      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Groupe scolaire Victor Hugo — Bordeaux</h3>
+            <span style="font-size:12px; color:var(--text-mid);">5.8 M€ · MOE complète · Date limite 15/04/2026</span>
+          </div>
+          <span class="tag tag-top">94% match</span>
+        </div>
+        <div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">
+          <strong style="color:var(--text);">🤖 Recommandation IA :</strong> Ce marché nécessite des compétences en structure béton, CVC et économie de la construction. L'équipe ci-dessous a déjà collaboré sur 2 projets similaires et couvre 100% des lots.
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:var(--accent-light); color:var(--accent);">BS</div>
+          <div class="team-info"><div class="name">BET Soulier</div><div class="role">Structure béton · 3 collabs passées</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">91%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:rgba(74,144,217,0.1); color:var(--blue);">TF</div>
+          <div class="team-info"><div class="name">Thermibat Fluides</div><div class="role">CVC / Plomberie · 2 collabs passées</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">87%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:rgba(139,92,246,0.1); color:var(--purple);">EC</div>
+          <div class="team-info"><div class="name">Éco-Conseil 44</div><div class="role">Économiste · 1 collab passée</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">84%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:rgba(16,185,129,0.1); color:var(--green);">PA</div>
+          <div class="team-info"><div class="name">Paysage Atlantique</div><div class="role">Paysagiste · Nouveau partenaire suggéré</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">78%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l'équipe</button>
+      </div>
+
+      <!-- Equipe pour Médiathèque -->
+      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Médiathèque intercommunale — Pornic</h3>
+            <span style="font-size:12px; color:var(--text-mid);">3.2 M€ · MOE complète · Date limite 22/04/2026</span>
+          </div>
+          <span class="tag tag-top">87% match</span>
+        </div>
+        <div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">
+          <strong style="color:var(--text);">🤖 Recommandation IA :</strong> Programme culturel avec exigences acoustiques et scénographiques. Suggestion d'un acousticien spécialisé ERP + un BET généraliste local.
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:var(--accent-light); color:var(--accent);">BS</div>
+          <div class="team-info"><div class="name">BET Soulier</div><div class="role">Structure · Référence bibliothèque 2021</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">89%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:rgba(245,158,11,0.1); color:var(--yellow);">AA</div>
+          <div class="team-info"><div class="name">Avel Acoustique</div><div class="role">Acousticien · Spécialiste ERP culturel</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">92%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <div class="team-member">
+          <div class="team-avatar" style="background:rgba(74,144,217,0.1); color:var(--blue);">TF</div>
+          <div class="team-info"><div class="name">Thermibat Fluides</div><div class="role">CVC / Plomberie</div></div>
+          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">85%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
+        </div>
+        <button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l'équipe</button>
+      </div>
+    </div>
+
+    <!-- ═══ TAB 3 : RÉDACTION ═══ -->
+    <div class="dash-tab-content" id="tab-redaction">
+      <div class="stats-bar">
+        <div class="stat-card"><div class="stat-val" style="color:var(--accent)">2</div><div class="stat-label">Dossiers en cours</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--green)">1</div><div class="stat-label">Dossier finalisé</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:var(--blue)">6</div><div class="stat-label">Pièces générées</div></div>
+        <div class="stat-card"><div class="stat-val" style="color:#DC2626">3j</div><div class="stat-label">Prochaine date limite</div></div>
+      </div>
+
+      <p style="font-size:13px; color:var(--text-mid); margin-bottom:18px;">L'IA vous assiste dans la rédaction des pièces de candidature et d'offre. Sélectionnez un marché pour générer vos documents.</p>
+
+      <!-- Dossier Victor Hugo -->
+      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Groupe scolaire Victor Hugo — Bordeaux</h3>
+            <span style="font-size:12px; color:var(--text-mid);">Date limite 15/04/2026 · <span style="color:#DC2626; font-weight:600;">3 jours restants</span></span>
+          </div>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; background:rgba(245,158,11,0.1); color:var(--yellow);">En cours</span>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--border); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:18px;">📄</span>
+              <div><div style="font-size:13px; font-weight:600;">Lettre de candidature (DC1)</div><div style="font-size:11px; color:var(--text-mid);">Formulaire pré-rempli avec vos informations</div></div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--green);">✓ Généré</span>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--border); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:18px;">📄</span>
+              <div><div style="font-size:13px; font-weight:600;">Déclaration du candidat (DC2)</div><div style="font-size:11px; color:var(--text-mid);">Chiffres clés et capacités pré-remplis</div></div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--green);">✓ Généré</span>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--border); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:18px;">📝</span>
+              <div><div style="font-size:13px; font-weight:600;">Mémoire technique</div><div style="font-size:11px; color:var(--text-mid);">Méthodologie, références, moyens humains</div></div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--yellow);">⏳ Brouillon</span>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--border); border-radius:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:18px;">📊</span>
+              <div><div style="font-size:13px; font-weight:600;">Fiches de références</div><div style="font-size:11px; color:var(--text-mid);">3 références sélectionnées, mises en page</div></div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--green);">✓ Généré</span>
+          </div>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border:1px solid var(--border); border-radius:10px; background:#F9F7F4;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:18px;">📎</span>
+              <div><div style="font-size:13px; font-weight:600;">Attestations & certificats</div><div style="font-size:11px; color:var(--text-mid);">Assurance, KBIS, attestation fiscale…</div></div>
+            </div>
+            <span style="font-size:11px; font-weight:700; color:var(--text-dim);">À compléter</span>
+          </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn-sidebar primary" style="flex:1;">✍️ Continuer la rédaction</button>
+          <button class="btn-sidebar secondary" style="flex:1;">📦 Exporter le dossier</button>
+        </div>
+      </div>
+
+      <!-- Dossier Médiathèque -->
+      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <div>
+            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Médiathèque intercommunale — Pornic</h3>
+            <span style="font-size:12px; color:var(--text-mid);">Date limite 22/04/2026 · 10 jours restants</span>
+          </div>
+          <span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; background:rgba(74,144,217,0.1); color:var(--blue);">Nouveau</span>
+        </div>
+
+        <div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">
+          <strong style="color:var(--text);">🤖 Analyse du RC :</strong> Candidature en 2 phases. Phase 1 : dossier de compétences + 3 références max. Phase 2 : offre technique et financière sur invitation. Pièces requises : DC1, DC2, mémoire de compétences, références illustrées.
+        </div>
+
+        <div style="display:flex; gap:10px;">
+          <button class="btn-sidebar primary" style="flex:1;">🚀 Démarrer la rédaction</button>
+          <button class="btn-sidebar secondary" style="flex:1;">📋 Voir le RC</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -639,6 +827,13 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
 <script>
 // ── Page navigation ──
+function switchTab(tabId, btn) {
+  document.querySelectorAll('.dash-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.dash-tab-content').forEach(function(c) { c.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('tab-' + tabId).classList.add('active');
+}
+
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
@@ -906,41 +1101,81 @@ function goToStep(step) {
   }
 }
 
-// ── Step 2 : Compétences + Références ──
+// ── Step 2 : Compétences + Références (mock data pour maquette) ──
+// En production : scraping DECP, OPQIBI, OPQU, BDD M2BPO, analyse web IA
 
 var currentCompetences = [];
+
+// Mock : compétences selon code NAF
+var MOCK_COMPETENCES = {
+  '7111Z': ['Architecte'],
+  '7112B': [
+    'AMO en technique',
+    'Maîtrise d\'œuvre en génie climatique complexe',
+    'Maîtrise d\'œuvre en électricité complexe',
+    'Étude d\'installations frigorifiques et de climatisation complexes',
+    'Audit énergétique des bâtiments',
+    'Maîtrise d\'œuvre de fluides complexes',
+    'Direction de l\'Exécution des Travaux'
+  ],
+  '7112A': [
+    'Ingénierie',
+    'Activité de métreur',
+    'Études techniques'
+  ],
+  '7490A': [
+    'AMO en technique',
+    'Conseil en développement durable',
+    'BIM Management',
+    'Audit énergétique des bâtiments'
+  ]
+};
+
+// Mock : références DECP
+var MOCK_REFERENCES = [
+  { objet: 'Réhabilitation et extension du groupe scolaire Jean-Jaurès', acheteur: 'Ville de Montreuil', montant: 2850000, annee: '2024', nature: 'Travaux' },
+  { objet: 'Construction d\'un centre aquatique intercommunal', acheteur: 'CA Grand Paris Sud', montant: 18500000, annee: '2023', nature: 'Travaux' },
+  { objet: 'Maîtrise d\'œuvre pour la restructuration du bâtiment B de l\'EHPAD Les Tilleuls', acheteur: 'Département du Val-de-Marne', montant: 450000, annee: '2023', nature: 'Services' },
+  { objet: 'Mission de diagnostic énergétique et étude de faisabilité – patrimoine communal', acheteur: 'Commune de Palaiseau', montant: 85000, annee: '2022', nature: 'Services' },
+  { objet: 'Conception et suivi de travaux pour la construction de 42 logements collectifs', acheteur: 'OPH Essonne Habitat', montant: 1200000, annee: '2022', nature: 'Services' },
+  { objet: 'Rénovation thermique de l\'école maternelle Pasteur', acheteur: 'Ville de Massy', montant: 320000, annee: '2021', nature: 'Travaux' }
+];
 
 function populateStep2() {
   if (!selectedStructure) return;
   currentCompetences = [];
   document.getElementById('competences-list').innerHTML = '';
+  document.getElementById('comp-loading').style.display = 'none';
 
   var naf = (selectedStructure.activite_code || '').replace(/[\.\s\-]/g, '').toUpperCase();
-  var siren = selectedStructure.siren || '';
 
-  // 1. Compétences
-  if (naf === '7111Z') {
-    // Architecte uniquement
-    addCompetenceTag('Architecte', true);
-    document.getElementById('comp-loading').style.display = 'none';
-  } else if (['7112B', '7490A'].indexOf(naf) !== -1 && siren) {
-    // Recherche OPQIBI
-    fetchOPQIBI(siren);
-  } else {
-    // Pas de compétences auto-détectées
-    document.getElementById('comp-loading').style.display = 'none';
+  // ── Compétences ──
+  var tags = MOCK_COMPETENCES[naf] || [];
+  if (tags.length === 0 && selectedStructure.activite_label) {
+    tags = [selectedStructure.activite_label];
   }
 
-  // 2. Références DECP
-  fetchDECP(siren);
+  var source = '';
+  if (naf === '7111Z') {
+    source = 'Détecté depuis votre code NAF. Ajoutez vos autres compétences.';
+  } else if (['7112B', '7490A'].indexOf(naf) !== -1) {
+    source = 'Qualifications importées depuis <strong>OPQIBI</strong>. Vous pouvez en ajouter ou en supprimer.';
+  } else {
+    source = 'Ajoutez les compétences de votre structure.';
+  }
+  document.getElementById('comp-subtitle').innerHTML = source;
+
+  for (var i = 0; i < tags.length; i++) {
+    addCompetenceTag(tags[i]);
+  }
+
+  // ── Références ──
+  populateReferences();
 }
 
-// ── Compétence tags ──
-
-function addCompetenceTag(label, autoDetected) {
+function addCompetenceTag(label) {
   if (!label || label.trim() === '') return;
   label = label.trim();
-  // Avoid duplicates
   var lower = label.toLowerCase();
   for (var i = 0; i < currentCompetences.length; i++) {
     if (currentCompetences[i].toLowerCase() === lower) return;
@@ -970,161 +1205,55 @@ function addCompetence() {
   var input = document.getElementById('input-add-comp');
   var val = input.value.trim();
   if (val) {
-    addCompetenceTag(val, false);
+    addCompetenceTag(val);
     input.value = '';
   }
 }
 
-// ── OPQIBI scraping via proxy CORS ──
+// ── Références mock ──
 
-function fetchOPQIBI(siren) {
-  var compLoading = document.getElementById('comp-loading');
-  compLoading.style.display = 'block';
-
-  // Step 1: search OPQIBI to find fiche ID
-  var searchUrl = 'https://www.opqibi.com/recherche-resultat?Siren=' + siren;
-  var proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(searchUrl);
-
-  console.log('OPQIBI search:', searchUrl);
-
-  fetch(proxyUrl)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.text();
-    })
-    .then(function(html) {
-      // Parse HTML to find fiche link
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(html, 'text/html');
-
-      // Look for link to /fiche/NNN or /public/fiche/NNN
-      var links = doc.querySelectorAll('a[href*="/fiche/"]');
-      if (links.length === 0) {
-        console.log('OPQIBI: no fiche found for SIREN', siren);
-        compLoading.style.display = 'none';
-        return;
-      }
-
-      var ficheHref = links[0].getAttribute('href');
-      var ficheUrl = 'https://www.opqibi.com' + (ficheHref.startsWith('/') ? '' : '/') + ficheHref;
-      console.log('OPQIBI fiche URL:', ficheUrl);
-
-      // Step 2: fetch the fiche page
-      return fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(ficheUrl));
-    })
-    .then(function(r) {
-      if (!r) return;
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.text();
-    })
-    .then(function(html) {
-      if (!html) return;
-      compLoading.style.display = 'none';
-
-      var parser = new DOMParser();
-      var doc = parser.parseFromString(html, 'text/html');
-
-      // Extract qualifications from table
-      var rows = doc.querySelectorAll('table tr');
-      var qualifications = [];
-
-      for (var i = 0; i < rows.length; i++) {
-        var cells = rows[i].querySelectorAll('td');
-        if (cells.length >= 2) {
-          var qualLabel = (cells[1].textContent || '').trim();
-          if (qualLabel && qualLabel.length > 2) {
-            qualifications.push(qualLabel);
-          }
-        }
-      }
-
-      console.log('OPQIBI qualifications found:', qualifications.length, qualifications);
-
-      if (qualifications.length > 0) {
-        document.getElementById('comp-subtitle').innerHTML = 'Qualifications importées depuis <strong>OPQIBI</strong>. Vous pouvez en ajouter ou en supprimer.';
-        for (var j = 0; j < qualifications.length; j++) {
-          addCompetenceTag(qualifications[j], true);
-        }
-      }
-    })
-    .catch(function(err) {
-      console.warn('OPQIBI fetch error:', err);
-      compLoading.style.display = 'none';
-    });
-}
-
-// ── DECP via data.economie.gouv.fr ──
-
-var DECP_API = 'https://data.economie.gouv.fr/api/explore/v2.1/catalog/datasets/decp-v3-marches-valides/records';
-
-function fetchDECP(siren) {
-  if (!siren) {
-    document.getElementById('decp-loading').style.display = 'none';
-    document.getElementById('decp-empty').style.display = 'block';
-    return;
-  }
-
+function populateReferences() {
   var loadEl = document.getElementById('decp-loading');
   var emptyEl = document.getElementById('decp-empty');
   var resultsEl = document.getElementById('decp-results');
   var listEl = document.getElementById('decp-list');
   var countEl = document.getElementById('decp-count');
 
+  // Simulate brief loading
   loadEl.style.display = 'block';
   emptyEl.style.display = 'none';
   resultsEl.style.display = 'none';
-  listEl.innerHTML = '';
 
-  var url = DECP_API + '?where=titulaire_id_titulaire%20LIKE%20%22' + siren + '%25%22&limit=30&order_by=date_notification_marche%20DESC';
+  setTimeout(function() {
+    loadEl.style.display = 'none';
+    var data = MOCK_REFERENCES;
 
-  console.log('DECP fetch:', url);
-
-  fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    })
-    .then(function(resp) {
-      loadEl.style.display = 'none';
-      var data = resp.results || [];
-
-      if (data.length === 0) {
-        emptyEl.style.display = 'block';
-        return;
-      }
-
-      var total = resp.total_count || data.length;
-      countEl.textContent = total + ' marché' + (total > 1 ? 's' : '') + ' trouvé' + (total > 1 ? 's' : '') + (total > 30 ? ' (30 plus récents)' : '');
-      resultsEl.style.display = 'block';
-
-      var html = '';
-      for (var i = 0; i < data.length; i++) {
-        var m = data[i];
-        var montant = m.montant_marche ? formatMontant(m.montant_marche) : (m.montant ? formatMontant(m.montant) : 'N/C');
-        var dateNotif = m.date_notification_marche || m.datenotification || '';
-        var annee = dateNotif ? String(dateNotif).substring(0, 4) : '';
-        var acheteur = m.acheteur_nom_acheteur || m.nom_acheteur || m.acheteur_nom || 'Acheteur public';
-        var objet = m.objet_marche || m.objet || 'Sans objet';
-        var nature = m.nature_marche || m.nature || '';
-
-        html += '<label class="ref-card" style="cursor:pointer; display:flex; align-items:flex-start;">' +
-          '<input type="checkbox" class="decp-check" checked style="margin-right:12px; margin-top:4px; accent-color:var(--accent); width:18px; height:18px; flex-shrink:0;">' +
-          '<div style="flex:1; min-width:0;">' +
-            '<h4>' + escapeHtml(objet.length > 120 ? objet.substring(0, 120) + '…' : objet) + '</h4>' +
-            '<p>' + escapeHtml(acheteur) +
-            (nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(nature) + '</span>' : '') +
-            '</p>' +
-          '</div>' +
-          '<div class="ref-amount">' + montant + (annee ? '<div class="ref-year">' + annee + '</div>' : '') + '</div>' +
-        '</label>';
-      }
-      listEl.innerHTML = html;
-    })
-    .catch(function(err) {
-      console.error('DECP API error:', err);
-      loadEl.style.display = 'none';
+    if (data.length === 0) {
       emptyEl.style.display = 'block';
-    });
+      return;
+    }
+
+    countEl.textContent = data.length + ' marché' + (data.length > 1 ? 's' : '') + ' trouvé' + (data.length > 1 ? 's' : '');
+    resultsEl.style.display = 'block';
+
+    var html = '';
+    for (var i = 0; i < data.length; i++) {
+      var m = data[i];
+      var montant = formatMontant(m.montant);
+
+      html += '<label class="ref-card" style="cursor:pointer; display:flex; align-items:flex-start;">' +
+        '<input type="checkbox" class="decp-check" checked style="margin-right:12px; margin-top:4px; accent-color:var(--accent); width:18px; height:18px; flex-shrink:0;">' +
+        '<div style="flex:1; min-width:0;">' +
+          '<h4>' + escapeHtml(m.objet) + '</h4>' +
+          '<p>' + escapeHtml(m.acheteur) +
+          (m.nature ? ' · <span style="font-size:10px; font-weight:600; color:var(--accent); background:var(--accent-light); padding:2px 6px; border-radius:3px;">' + escapeHtml(m.nature) + '</span>' : '') +
+          '</p>' +
+        '</div>' +
+        '<div class="ref-amount">' + montant + (m.annee ? '<div class="ref-year">' + m.annee + '</div>' : '') + '</div>' +
+      '</label>';
+    }
+    listEl.innerHTML = html;
+  }, 600);
 }
 
 function toggleAllDecp() {
