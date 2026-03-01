@@ -555,78 +555,66 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
     <!-- ═══ TAB 2 : MATCHING ÉQUIPE ═══ -->
     <div class="dash-tab-content" id="tab-equipe">
-      <div class="stats-bar">
-        <div class="stat-card"><div class="stat-val" style="color:var(--accent)">12</div><div class="stat-label">Partenaires dans le réseau</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:var(--green)">5</div><div class="stat-label">Collaborations passées</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:var(--blue)">3</div><div class="stat-label">Équipes suggérées</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:var(--purple)">8</div><div class="stat-label">Compétences couvertes</div></div>
+
+      <!-- Sous-onglets -->
+      <div style="display:flex; gap:0; margin-bottom:20px; border-bottom:1px solid var(--border);">
+        <button class="sub-tab active" onclick="switchSubTab('equipe-acceptes', this)">Acceptés <span id="badge-equipe-acceptes" class="sub-badge" style="background:rgba(16,185,129,0.1); color:var(--green);">0</span></button>
+        <button class="sub-tab" onclick="switchSubTab('equipe-ajouter', this)">Ajouter une annonce</button>
       </div>
 
-      <p style="font-size:13px; color:var(--text-mid); margin-bottom:18px;">Sélectionnez un marché pour voir l'équipe optimale suggérée par l'IA, basée sur les compétences requises, vos collaborations passées et la disponibilité.</p>
-
-      <!-- Equipe pour Victor Hugo -->
-      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <div>
-            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Groupe scolaire Victor Hugo — Bordeaux</h3>
-            <span style="font-size:12px; color:var(--text-mid);">5.8 M€ · MOE complète · Date limite 15/04/2026</span>
-          </div>
-          <span class="tag tag-top">94% match</span>
+      <!-- Sous-tab : marchés acceptés avec suggestions équipe -->
+      <div class="sub-tab-content active" id="subtab-equipe-acceptes">
+        <div id="equipe-acceptes-list"></div>
+        <div id="equipe-acceptes-empty" style="text-align:center; padding:50px 0;">
+          <div style="font-size:36px; margin-bottom:12px;">👥</div>
+          <div style="font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px;">Aucun marché accepté</div>
+          <div style="font-size:13px; color:var(--text-mid);">Acceptez des marchés dans l'onglet Matching Marché pour voir les suggestions d'équipe ici.</div>
         </div>
-        <div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">
-          <strong style="color:var(--text);">🤖 Recommandation IA :</strong> Ce marché nécessite des compétences en structure béton, CVC et économie de la construction. L'équipe ci-dessous a déjà collaboré sur 2 projets similaires et couvre 100% des lots.
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:var(--accent-light); color:var(--accent);">BS</div>
-          <div class="team-info"><div class="name">BET Soulier</div><div class="role">Structure béton · 3 collabs passées</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">91%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:rgba(74,144,217,0.1); color:var(--blue);">TF</div>
-          <div class="team-info"><div class="name">Thermibat Fluides</div><div class="role">CVC / Plomberie · 2 collabs passées</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">87%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:rgba(139,92,246,0.1); color:var(--purple);">EC</div>
-          <div class="team-info"><div class="name">Éco-Conseil 44</div><div class="role">Économiste · 1 collab passée</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">84%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:rgba(16,185,129,0.1); color:var(--green);">PA</div>
-          <div class="team-info"><div class="name">Paysage Atlantique</div><div class="role">Paysagiste · Nouveau partenaire suggéré</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">78%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l'équipe</button>
       </div>
 
-      <!-- Equipe pour Médiathèque -->
-      <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <div>
-            <h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">Médiathèque intercommunale — Pornic</h3>
-            <span style="font-size:12px; color:var(--text-mid);">3.2 M€ · MOE complète · Date limite 22/04/2026</span>
+      <!-- Sous-tab : ajouter une annonce manuellement -->
+      <div class="sub-tab-content" id="subtab-equipe-ajouter">
+        <div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px;">
+          <h3 style="font-size:15px; font-weight:700; margin-bottom:4px;">Ajouter une annonce</h3>
+          <p style="font-size:13px; color:var(--text-mid); margin-bottom:18px;">Collez l'URL d'un avis de marché ou saisissez les informations manuellement pour obtenir une suggestion d'équipe.</p>
+
+          <div style="margin-bottom:14px;">
+            <label style="font-size:12px; font-weight:600; color:var(--text-mid); display:block; margin-bottom:4px;">URL de l'annonce (BOAMP, marchés-publics.gouv.fr…)</label>
+            <input type="text" id="input-url-annonce" placeholder="https://www.marches-publics.gouv.fr/…" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:var(--sans); background:var(--card); box-sizing:border-box;">
           </div>
-          <span class="tag tag-top">87% match</span>
+
+          <div style="display:flex; align-items:center; gap:14px; margin:18px 0; color:var(--text-dim); font-size:12px;">
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+            ou saisie manuelle
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+          </div>
+
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:14px;">
+            <div>
+              <label style="font-size:12px; font-weight:600; color:var(--text-mid); display:block; margin-bottom:4px;">Intitulé du marché</label>
+              <input type="text" id="input-titre-annonce" placeholder="Ex: Réhabilitation école primaire…" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:var(--sans); background:var(--card); box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600; color:var(--text-mid); display:block; margin-bottom:4px;">Acheteur</label>
+              <input type="text" id="input-acheteur-annonce" placeholder="Ex: Ville de Lyon" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:var(--sans); background:var(--card); box-sizing:border-box;">
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:18px;">
+            <div>
+              <label style="font-size:12px; font-weight:600; color:var(--text-mid); display:block; margin-bottom:4px;">Montant estimé</label>
+              <input type="text" id="input-montant-annonce" placeholder="Ex: 2 500 000" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:var(--sans); background:var(--card); box-sizing:border-box;">
+            </div>
+            <div>
+              <label style="font-size:12px; font-weight:600; color:var(--text-mid); display:block; margin-bottom:4px;">Date limite</label>
+              <input type="date" id="input-date-annonce" style="width:100%; padding:10px 14px; border:1.5px solid var(--border); border-radius:8px; font-size:13px; font-family:var(--sans); background:var(--card); box-sizing:border-box;">
+            </div>
+          </div>
+
+          <button class="btn-sidebar primary" onclick="addManualAnnonce()">🤖 Analyser et suggérer une équipe</button>
         </div>
-        <div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">
-          <strong style="color:var(--text);">🤖 Recommandation IA :</strong> Programme culturel avec exigences acoustiques et scénographiques. Suggestion d'un acousticien spécialisé ERP + un BET généraliste local.
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:var(--accent-light); color:var(--accent);">BS</div>
-          <div class="team-info"><div class="name">BET Soulier</div><div class="role">Structure · Référence bibliothèque 2021</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">89%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:rgba(245,158,11,0.1); color:var(--yellow);">AA</div>
-          <div class="team-info"><div class="name">Avel Acoustique</div><div class="role">Acousticien · Spécialiste ERP culturel</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">92%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <div class="team-member">
-          <div class="team-avatar" style="background:rgba(74,144,217,0.1); color:var(--blue);">TF</div>
-          <div class="team-info"><div class="name">Thermibat Fluides</div><div class="role">CVC / Plomberie</div></div>
-          <div style="display:flex; align-items:center; gap:8px;"><div class="team-score">85%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>
-        </div>
-        <button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l'équipe</button>
+
+        <!-- Résultat de l'ajout manuel -->
+        <div id="manual-equipe-result" style="display:none; margin-top:16px;"></div>
       </div>
     </div>
 
@@ -975,6 +963,99 @@ function undoRefuse(id) {
 
 // Init marches on dashboard load
 document.addEventListener('DOMContentLoaded', function() { initMarches(); });
+
+// ── Matching Équipe : lié aux marchés acceptés ──
+var MOCK_EQUIPES = {
+  1: { ai: 'Ce marché nécessite des compétences en structure béton, CVC et économie de la construction. L\'équipe ci-dessous a déjà collaboré sur 2 projets similaires et couvre 100% des lots.', membres: [
+    { initiales: 'BS', nom: 'BET Soulier', role: 'Structure béton · 3 collabs passées', score: 91, color: 'var(--accent)', bg: 'var(--accent-light)' },
+    { initiales: 'TF', nom: 'Thermibat Fluides', role: 'CVC / Plomberie · 2 collabs passées', score: 87, color: 'var(--blue)', bg: 'rgba(74,144,217,0.1)' },
+    { initiales: 'EC', nom: 'Éco-Conseil 44', role: 'Économiste · 1 collab passée', score: 84, color: 'var(--purple)', bg: 'rgba(139,92,246,0.1)' },
+    { initiales: 'PA', nom: 'Paysage Atlantique', role: 'Paysagiste · Nouveau partenaire suggéré', score: 78, color: 'var(--green)', bg: 'rgba(16,185,129,0.1)' }
+  ]},
+  2: { ai: 'Programme culturel avec exigences acoustiques et scénographiques. Suggestion d\'un acousticien spécialisé ERP + un BET généraliste local.', membres: [
+    { initiales: 'BS', nom: 'BET Soulier', role: 'Structure · Référence bibliothèque 2021', score: 89, color: 'var(--accent)', bg: 'var(--accent-light)' },
+    { initiales: 'AA', nom: 'Avel Acoustique', role: 'Acousticien · Spécialiste ERP culturel', score: 92, color: 'var(--yellow)', bg: 'rgba(245,158,11,0.1)' },
+    { initiales: 'TF', nom: 'Thermibat Fluides', role: 'CVC / Plomberie', score: 85, color: 'var(--blue)', bg: 'rgba(74,144,217,0.1)' }
+  ]},
+  3: { ai: 'Projet de réhabilitation énergétique nécessitant un BET thermique spécialisé et un économiste. Bonne synergie avec vos partenaires habituels.', membres: [
+    { initiales: 'TF', nom: 'Thermibat Fluides', role: 'CVC / Thermique · Spécialiste réhab', score: 93, color: 'var(--blue)', bg: 'rgba(74,144,217,0.1)' },
+    { initiales: 'EC', nom: 'Éco-Conseil 44', role: 'Économiste', score: 82, color: 'var(--purple)', bg: 'rgba(139,92,246,0.1)' }
+  ]}
+};
+
+function renderEquipeAcceptes() {
+  var list = document.getElementById('equipe-acceptes-list');
+  var empty = document.getElementById('equipe-acceptes-empty');
+  document.getElementById('badge-equipe-acceptes').textContent = acceptedMarches.length;
+
+  if (acceptedMarches.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  var html = '';
+  for (var i = 0; i < acceptedMarches.length; i++) {
+    var m = acceptedMarches[i];
+    var eq = MOCK_EQUIPES[m.id] || { ai: 'Analyse en cours…', membres: [] };
+
+    html += '<div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px; margin-bottom:16px;">';
+    html += '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">';
+    html += '<div><h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">' + escapeHtml(m.titre) + '</h3>';
+    html += '<span style="font-size:12px; color:var(--text-mid);">' + escapeHtml(m.montant) + ' · ' + escapeHtml(m.type) + ' · Date limite ' + escapeHtml(m.deadline) + '</span></div>';
+    html += '<span class="tag tag-top">' + m.score + '% match</span></div>';
+    html += '<div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">';
+    html += '<strong style="color:var(--text);">🤖 Recommandation IA :</strong> ' + escapeHtml(eq.ai) + '</div>';
+
+    for (var j = 0; j < eq.membres.length; j++) {
+      var mb = eq.membres[j];
+      html += '<div class="team-member">';
+      html += '<div class="team-avatar" style="background:' + mb.bg + '; color:' + mb.color + ';">' + mb.initiales + '</div>';
+      html += '<div class="team-info"><div class="name">' + escapeHtml(mb.nom) + '</div><div class="role">' + escapeHtml(mb.role) + '</div></div>';
+      html += '<div style="display:flex; align-items:center; gap:8px;"><div class="team-score">' + mb.score + '%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div>';
+      html += '</div>';
+    }
+    html += '<button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l\'équipe</button>';
+    html += '</div>';
+  }
+  list.innerHTML = html;
+}
+
+function addManualAnnonce() {
+  var titre = document.getElementById('input-titre-annonce').value.trim();
+  var url = document.getElementById('input-url-annonce').value.trim();
+  var acheteur = document.getElementById('input-acheteur-annonce').value.trim();
+
+  if (!titre && !url) {
+    alert('Saisissez un intitulé ou une URL.');
+    return;
+  }
+
+  var label = titre || 'Annonce importée depuis URL';
+  var result = document.getElementById('manual-equipe-result');
+
+  result.style.display = 'block';
+  result.innerHTML = '<div style="background:white; border:1px solid var(--border); border-radius:14px; padding:24px;">' +
+    '<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">' +
+      '<div><h3 style="font-size:15px; font-weight:700; margin-bottom:2px;">' + escapeHtml(label) + '</h3>' +
+      (acheteur ? '<span style="font-size:12px; color:var(--text-mid);">' + escapeHtml(acheteur) + '</span>' : '') + '</div>' +
+      '<span style="font-size:11px; font-weight:700; padding:4px 10px; border-radius:20px; background:rgba(74,144,217,0.1); color:var(--blue);">Ajout manuel</span>' +
+    '</div>' +
+    '<div style="font-size:13px; color:var(--text-mid); margin-bottom:14px; padding:10px 14px; background:#F9F7F4; border-radius:8px;">' +
+      '<strong style="color:var(--text);">🤖 Analyse IA :</strong> D\'après l\'intitulé, ce marché requiert des compétences en maîtrise d\'œuvre technique. Voici les partenaires recommandés dans votre réseau.' +
+    '</div>' +
+    '<div class="team-member"><div class="team-avatar" style="background:var(--accent-light); color:var(--accent);">BS</div><div class="team-info"><div class="name">BET Soulier</div><div class="role">Structure · Partenaire fréquent</div></div><div style="display:flex; align-items:center; gap:8px;"><div class="team-score">88%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div></div>' +
+    '<div class="team-member"><div class="team-avatar" style="background:rgba(74,144,217,0.1); color:var(--blue);">TF</div><div class="team-info"><div class="name">Thermibat Fluides</div><div class="role">CVC / Plomberie</div></div><div style="display:flex; align-items:center; gap:8px;"><div class="team-score">85%</div><span style="font-size:11px; color:var(--text-dim);">match</span></div></div>' +
+    '<button class="btn-sidebar primary" style="margin-top:14px;">✉️ Contacter l\'équipe</button>' +
+  '</div>';
+}
+
+// Override accept/refuse to also update equipe tab
+var _origAccept = acceptMarche;
+var _origUndoAccept = undoAccept;
+acceptMarche = function(id) { _origAccept(id); renderEquipeAcceptes(); };
+undoAccept = function(id) { _origUndoAccept(id); renderEquipeAcceptes(); };
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
