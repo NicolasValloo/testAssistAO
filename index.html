@@ -177,6 +177,24 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 .dash-tab-content { display: none; }
 .dash-tab-content.active { display: block; }
 
+/* Sub-tabs */
+.sub-tab { padding: 10px 18px; font-family: var(--sans); font-size: 13px; font-weight: 600; color: var(--text-mid); background: none; border: none; cursor: pointer; position: relative; transition: color 0.2s; }
+.sub-tab:hover { color: var(--text); }
+.sub-tab.active { color: var(--accent); }
+.sub-tab.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent); }
+.sub-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 10px; font-size: 11px; font-weight: 700; background: var(--accent-light); color: var(--accent); margin-left: 6px; }
+.sub-tab-content { display: none; }
+.sub-tab-content.active { display: block; }
+
+/* Accept/refuse buttons */
+.marche-actions { display: flex; gap: 8px; margin-top: 12px; }
+.btn-accept { padding: 8px 18px; border: none; border-radius: 8px; font-family: var(--sans); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; background: var(--green); color: white; }
+.btn-accept:hover { opacity: 0.85; }
+.btn-refuse { padding: 8px 18px; border: 1.5px solid var(--border); border-radius: 8px; font-family: var(--sans); font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s; background: white; color: var(--text-mid); }
+.btn-refuse:hover { border-color: #DC2626; color: #DC2626; }
+.btn-undo { padding: 6px 14px; border: 1.5px solid var(--border); border-radius: 6px; font-family: var(--sans); font-size: 11px; font-weight: 600; cursor: pointer; background: white; color: var(--text-mid); transition: all 0.15s; }
+.btn-undo:hover { border-color: var(--accent); color: var(--accent); }
+
 .dash-filters { display: flex; gap: 8px; }
 .filter-btn { font-family: var(--sans); font-size: 12px; font-weight: 600; padding: 8px 14px; border: 1.5px solid var(--border); border-radius: 8px; background: white; cursor: pointer; transition: all 0.15s; color: var(--text-mid); }
 .filter-btn:hover, .filter-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
@@ -493,78 +511,46 @@ body { font-family: var(--sans); color: var(--text); background: var(--bg); over
 
     <!-- ═══ TAB 1 : MATCHING MARCHÉ ═══ -->
     <div class="dash-tab-content active" id="tab-marche">
-      <div class="stats-bar">
-        <div class="stat-card"><div class="stat-val" style="color:var(--accent)">7</div><div class="stat-label">Marchés cette semaine</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:var(--green)">83%</div><div class="stat-label">Score moyen</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:var(--blue)">2</div><div class="stat-label">Dossiers en cours</div></div>
-        <div class="stat-card"><div class="stat-val" style="color:#DC2626">3j</div><div class="stat-label">Prochaine date limite</div></div>
+
+      <!-- Sous-onglets -->
+      <div style="display:flex; gap:0; margin-bottom:20px; border-bottom:1px solid var(--border);">
+        <button class="sub-tab active" onclick="switchSubTab('propositions', this)">Propositions <span id="badge-propositions" class="sub-badge">3</span></button>
+        <button class="sub-tab" onclick="switchSubTab('acceptes', this)">Acceptés <span id="badge-acceptes" class="sub-badge" style="background:rgba(16,185,129,0.1); color:var(--green);">0</span></button>
+        <button class="sub-tab" onclick="switchSubTab('refuses', this)">Refusés <span id="badge-refuses" class="sub-badge" style="background:rgba(220,38,38,0.1); color:#DC2626;">0</span></button>
       </div>
 
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-        <div class="dash-filters">
-          <button class="filter-btn active">Tous</button>
-          <button class="filter-btn" onclick="this.classList.toggle('active')">Éducation</button>
-          <button class="filter-btn" onclick="this.classList.toggle('active')">Culture</button>
-          <button class="filter-btn" onclick="this.classList.toggle('active')">Logement</button>
+      <!-- Sous-tab : Propositions -->
+      <div class="sub-tab-content active" id="subtab-propositions">
+        <div id="propositions-list"></div>
+        <div id="propositions-empty" style="display:none; text-align:center; padding:50px 0;">
+          <div style="font-size:36px; margin-bottom:12px;">🎯</div>
+          <div style="font-size:16px; font-weight:700; color:var(--text); margin-bottom:6px;">Aucune proposition en attente</div>
+          <div style="font-size:13px; color:var(--text-mid); margin-bottom:20px;">Tous les marchés ont été traités. Vous pouvez ajuster vos critères ou explorer le meilleur match disponible.</div>
+          <div style="display:flex; gap:10px; justify-content:center;">
+            <button class="btn-sidebar secondary" style="width:auto; padding:10px 20px;" onclick="alert('Modification des critères (à implémenter)')">⚙️ Modifier mes critères</button>
+            <button class="btn-sidebar primary" style="width:auto; padding:10px 20px;" onclick="alert('Affichage du meilleur match (à implémenter)')">🔍 Voir le meilleur match actuel</button>
+          </div>
         </div>
       </div>
 
-      <div class="marche-list">
-        <div class="marche-card new" onclick="showPage('detail')">
-          <div class="marche-score score-green"><div class="score-num">94%</div><div class="score-label">match</div></div>
-          <div class="marche-body">
-            <h3>Restructuration et extension du groupe scolaire Victor Hugo — 12 classes</h3>
-            <div class="marche-meta">🏛️ Ville de Bordeaux · 📍 Bordeaux, Gironde · MOE</div>
-            <div class="marche-tags"><span class="tag tag-domain">Éducation</span><span class="tag tag-type">Réhabilitation</span><span class="tag tag-top">⭐ Top match</span></div>
-            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> 3 références scolaires similaires (dont Jean Moulin 2023, 4.2M€). Zone Nouvelle-Aquitaine couverte. Montant dans votre fourchette habituelle.</div>
-          </div>
-          <div class="marche-right"><div class="marche-amount">5.8 M€</div><div class="marche-deadline urgent">⏰ 15/04/2026</div></div>
-        </div>
-
-        <div class="marche-card new" onclick="showPage('detail')">
-          <div class="marche-score score-green"><div class="score-num">87%</div><div class="score-label">match</div></div>
-          <div class="marche-body">
-            <h3>Construction d'une médiathèque intercommunale — 1 800 m² SHON</h3>
-            <div class="marche-meta">🏛️ CC Pays de Retz · 📍 Pornic, Loire-Atlantique · MOE</div>
-            <div class="marche-tags"><span class="tag tag-domain">Culture</span><span class="tag tag-type">Neuf</span></div>
-            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence médiathèque Hélène Berr (2022, même programme). Proximité géographique (65 km). Compétence HQE pertinente.</div>
-          </div>
-          <div class="marche-right"><div class="marche-amount">3.2 M€</div><div class="marche-deadline">⏰ 22/04/2026</div></div>
-        </div>
-
-        <div class="marche-card" onclick="showPage('detail')">
-          <div class="marche-score score-green"><div class="score-num">82%</div><div class="score-label">match</div></div>
-          <div class="marche-body">
-            <h3>Réhabilitation énergétique EHPAD Les Glycines — 80 lits</h3>
-            <div class="marche-meta">🏛️ Département du Finistère · 📍 Quimper · MOE</div>
-            <div class="marche-tags"><span class="tag tag-domain">Santé</span><span class="tag tag-type">Réhabilitation</span></div>
-            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Expertise réhabilitation confirmée. Compétence HQE/performance énergétique. Distance 250 km (dans votre rayon région).</div>
-          </div>
-          <div class="marche-right"><div class="marche-amount">2.4 M€</div><div class="marche-deadline">⏰ 08/04/2026</div></div>
-        </div>
-
-        <div class="marche-card" onclick="showPage('detail')">
-          <div class="marche-score score-yellow"><div class="score-num">76%</div><div class="score-label">match</div></div>
-          <div class="marche-body">
-            <h3>Construction de 48 logements collectifs BBC — ZAC des Perrières</h3>
-            <div class="marche-meta">🏛️ Nantes Métropole Habitat · 📍 Rezé, Loire-Atlantique · MOE</div>
-            <div class="marche-tags"><span class="tag tag-domain">Logement</span><span class="tag tag-type">Neuf</span></div>
-            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Référence ZAC Prairie au Duc (56 logements, 2020). Très proche géographiquement (8 km). Programme légèrement différent.</div>
-          </div>
-          <div class="marche-right"><div class="marche-amount">4.1 M€</div><div class="marche-deadline">⏰ 30/04/2026</div></div>
-        </div>
-
-        <div class="marche-card" onclick="showPage('detail')">
-          <div class="marche-score score-yellow"><div class="score-num">71%</div><div class="score-label">match</div></div>
-          <div class="marche-body">
-            <h3>Concours de MOE — Pôle petite enfance multi-accueil 60 berceaux</h3>
-            <div class="marche-meta">🏛️ Ville de Saint-Nazaire · 📍 Saint-Nazaire, Loire-Atlantique · Concours</div>
-            <div class="marche-tags"><span class="tag tag-domain">Petite enfance</span><span class="tag tag-type">Concours</span></div>
-            <div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> Proximité géographique (60 km). Compétence construction neuve. ⚠ Pas de référence petite enfance directe.</div>
-          </div>
-          <div class="marche-right"><div class="marche-amount">1.9 M€</div><div class="marche-deadline">⏰ 12/05/2026</div></div>
+      <!-- Sous-tab : Acceptés -->
+      <div class="sub-tab-content" id="subtab-acceptes">
+        <div id="acceptes-list"></div>
+        <div id="acceptes-empty" style="text-align:center; padding:50px 0;">
+          <div style="font-size:36px; margin-bottom:12px;">📭</div>
+          <div style="font-size:14px; color:var(--text-mid);">Aucun marché accepté pour le moment.</div>
         </div>
       </div>
+
+      <!-- Sous-tab : Refusés -->
+      <div class="sub-tab-content" id="subtab-refuses">
+        <div id="refuses-list"></div>
+        <div id="refuses-empty" style="text-align:center; padding:50px 0;">
+          <div style="font-size:36px; margin-bottom:12px;">🚫</div>
+          <div style="font-size:14px; color:var(--text-mid);">Aucun marché refusé.</div>
+        </div>
+      </div>
+
     </div>
 
     <!-- ═══ TAB 2 : MATCHING ÉQUIPE ═══ -->
@@ -833,6 +819,162 @@ function switchTab(tabId, btn) {
   btn.classList.add('active');
   document.getElementById('tab-' + tabId).classList.add('active');
 }
+
+function switchSubTab(tabId, btn) {
+  document.querySelectorAll('.sub-tab').forEach(function(t) { t.classList.remove('active'); });
+  document.querySelectorAll('.sub-tab-content').forEach(function(c) { c.classList.remove('active'); });
+  btn.classList.add('active');
+  document.getElementById('subtab-' + tabId).classList.add('active');
+}
+
+// ── Matching Marché : accept / refuse logic ──
+var marchesData = [
+  { id: 1, titre: 'Restructuration et extension du groupe scolaire Victor Hugo — 12 classes', acheteur: 'Ville de Bordeaux', lieu: 'Bordeaux, Gironde', type: 'MOE', domaine: 'Éducation', nature: 'Réhabilitation', score: 94, montant: '5.8 M€', deadline: '15/04/2026', urgent: true, top: true, ai: '3 références scolaires similaires (dont Jean Moulin 2023, 4.2M€). Zone Nouvelle-Aquitaine couverte. Montant dans votre fourchette habituelle.' },
+  { id: 2, titre: 'Construction d\'une médiathèque intercommunale — 1 800 m² SHON', acheteur: 'CC Pays de Retz', lieu: 'Pornic, Loire-Atlantique', type: 'MOE', domaine: 'Culture', nature: 'Neuf', score: 87, montant: '3.2 M€', deadline: '22/04/2026', urgent: false, top: false, ai: 'Référence médiathèque Hélène Berr (2022, même programme). Proximité géographique (65 km). Compétence HQE pertinente.' },
+  { id: 3, titre: 'Réhabilitation énergétique EHPAD Les Glycines — 80 lits', acheteur: 'Département du Finistère', lieu: 'Quimper', type: 'MOE', domaine: 'Santé', nature: 'Réhabilitation', score: 82, montant: '2.4 M€', deadline: '08/04/2026', urgent: false, top: false, ai: 'Expertise réhabilitation confirmée. Compétence HQE/performance énergétique. Distance 250 km (dans votre rayon région).' }
+];
+
+var acceptedMarches = [];
+var refusedMarches = [];
+
+function initMarches() {
+  renderPropositions();
+  renderAccepted();
+  renderRefused();
+  updateBadges();
+}
+
+function renderMarcheCard(m, actions) {
+  var scoreClass = m.score >= 80 ? 'score-green' : 'score-yellow';
+  var html = '<div class="marche-card' + (m.top ? ' new' : '') + '" style="flex-direction:column;">' +
+    '<div style="display:flex; gap:20px; cursor:pointer;" onclick="showPage(\'detail\')">' +
+      '<div class="marche-score ' + scoreClass + '"><div class="score-num">' + m.score + '%</div><div class="score-label">match</div></div>' +
+      '<div class="marche-body">' +
+        '<h3>' + escapeHtml(m.titre) + '</h3>' +
+        '<div class="marche-meta">🏛️ ' + escapeHtml(m.acheteur) + ' · 📍 ' + escapeHtml(m.lieu) + ' · ' + escapeHtml(m.type) + '</div>' +
+        '<div class="marche-tags"><span class="tag tag-domain">' + escapeHtml(m.domaine) + '</span><span class="tag tag-type">' + escapeHtml(m.nature) + '</span>' + (m.top ? '<span class="tag tag-top">⭐ Top match</span>' : '') + '</div>' +
+        '<div class="marche-ai"><strong>🤖 Pourquoi ce marché :</strong> ' + escapeHtml(m.ai) + '</div>' +
+      '</div>' +
+      '<div class="marche-right"><div class="marche-amount">' + escapeHtml(m.montant) + '</div><div class="marche-deadline' + (m.urgent ? ' urgent' : '') + '">⏰ ' + escapeHtml(m.deadline) + '</div></div>' +
+    '</div>' +
+    actions +
+  '</div>';
+  return html;
+}
+
+function renderPropositions() {
+  var list = document.getElementById('propositions-list');
+  var empty = document.getElementById('propositions-empty');
+  if (marchesData.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  var html = '';
+  for (var i = 0; i < marchesData.length; i++) {
+    var m = marchesData[i];
+    var actions = '<div class="marche-actions">' +
+      '<button class="btn-accept" onclick="event.stopPropagation(); acceptMarche(' + m.id + ')">✓ Accepter</button>' +
+      '<button class="btn-refuse" onclick="event.stopPropagation(); refuseMarche(' + m.id + ')">✗ Refuser</button>' +
+    '</div>';
+    html += renderMarcheCard(m, actions);
+  }
+  list.innerHTML = '<div class="marche-list">' + html + '</div>';
+}
+
+function renderAccepted() {
+  var list = document.getElementById('acceptes-list');
+  var empty = document.getElementById('acceptes-empty');
+  if (acceptedMarches.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  var html = '';
+  for (var i = 0; i < acceptedMarches.length; i++) {
+    var m = acceptedMarches[i];
+    var actions = '<div class="marche-actions">' +
+      '<span style="font-size:12px; color:var(--green); font-weight:600;">✓ Accepté</span>' +
+      '<button class="btn-undo" onclick="event.stopPropagation(); undoAccept(' + m.id + ')">↩ Annuler</button>' +
+    '</div>';
+    html += renderMarcheCard(m, actions);
+  }
+  list.innerHTML = '<div class="marche-list">' + html + '</div>';
+}
+
+function renderRefused() {
+  var list = document.getElementById('refuses-list');
+  var empty = document.getElementById('refuses-empty');
+  if (refusedMarches.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  var html = '';
+  for (var i = 0; i < refusedMarches.length; i++) {
+    var m = refusedMarches[i];
+    var actions = '<div class="marche-actions">' +
+      '<span style="font-size:12px; color:#DC2626; font-weight:600;">✗ Refusé</span>' +
+      '<button class="btn-undo" onclick="event.stopPropagation(); undoRefuse(' + m.id + ')">↩ Remettre en proposition</button>' +
+    '</div>';
+    html += renderMarcheCard(m, actions);
+  }
+  list.innerHTML = '<div class="marche-list">' + html + '</div>';
+}
+
+function updateBadges() {
+  document.getElementById('badge-propositions').textContent = marchesData.length;
+  document.getElementById('badge-acceptes').textContent = acceptedMarches.length;
+  document.getElementById('badge-refuses').textContent = refusedMarches.length;
+}
+
+function acceptMarche(id) {
+  for (var i = 0; i < marchesData.length; i++) {
+    if (marchesData[i].id === id) {
+      acceptedMarches.push(marchesData.splice(i, 1)[0]);
+      break;
+    }
+  }
+  renderPropositions(); renderAccepted(); updateBadges();
+}
+
+function refuseMarche(id) {
+  for (var i = 0; i < marchesData.length; i++) {
+    if (marchesData[i].id === id) {
+      refusedMarches.push(marchesData.splice(i, 1)[0]);
+      break;
+    }
+  }
+  renderPropositions(); renderRefused(); updateBadges();
+}
+
+function undoAccept(id) {
+  for (var i = 0; i < acceptedMarches.length; i++) {
+    if (acceptedMarches[i].id === id) {
+      marchesData.push(acceptedMarches.splice(i, 1)[0]);
+      marchesData.sort(function(a, b) { return b.score - a.score; });
+      break;
+    }
+  }
+  renderPropositions(); renderAccepted(); updateBadges();
+}
+
+function undoRefuse(id) {
+  for (var i = 0; i < refusedMarches.length; i++) {
+    if (refusedMarches[i].id === id) {
+      marchesData.push(refusedMarches.splice(i, 1)[0]);
+      marchesData.sort(function(a, b) { return b.score - a.score; });
+      break;
+    }
+  }
+  renderPropositions(); renderRefused(); updateBadges();
+}
+
+// Init marches on dashboard load
+document.addEventListener('DOMContentLoaded', function() { initMarches(); });
 
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
